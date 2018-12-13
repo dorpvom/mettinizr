@@ -5,13 +5,17 @@ price: id, bun_class, amount
 purchase: id, account, amount, processed (account foreign_key on accound.id)
 mett_formula: bun, amount (bun foreign_key on price.id)
 '''
-import pymongo
+from pymongo import MongoClient
+
+
+class StorageException(Exception):
+    pass
 
 
 class MettStore:
 
     def __init__(self, mongo_server='127.0.0.1', mongo_port=27018, main_database='mett_main'):
-        self._client = pymongo.MongoClient('mongodb://{}:{}'.format(mongo_server, mongo_port), connect=False)
+        self._client = MongoClient('mongodb://{}:{}'.format(mongo_server, mongo_port), connect=False)
         self._mett_base = self._client[main_database]
         self._account = self._mett_base.account
         self._order = self._mett_base.order
@@ -21,7 +25,7 @@ class MettStore:
 
     def book_money(self, account, amount):
         # Increase balance of account by amount
-        pass
+        self._account.update_one({'_id': account}, {'$inc': {'balance': amount}})
 
     def assign_spare(self, account, bun_class):
         # add (account, bun_class) to order
@@ -29,11 +33,13 @@ class MettStore:
 
     def list_accounts(self):
         # return list of (accound.id, account.name) tuples
-        pass
+        return [(entry['_id'], entry['name']) for entry in self._account.find()]
 
     def create_order(self):  # throws Excreption on existing non-expired order
         # create new order
-        pass
+        if self._order.find({'expired': False}).count() > 0:
+            raise StorageException('Only one current order allowed at all time')
+        return self._order.insert_one({'expired': False, 'orders': []}).inserted_id
 
     def expire_order(self):
         # set expire of current order to true and decrease balances according to order
