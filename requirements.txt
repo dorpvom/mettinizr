@@ -4,3 +4,4 @@ pytest
 flask
 flask_security
 flask_sqlalchemy
+bcrypt

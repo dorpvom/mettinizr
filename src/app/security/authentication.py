@@ -37,6 +37,6 @@ def create_user_interface(db):
 def _add_configuration_to_app(app, config):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECURITY_PASSWORD_SALT'] = b'Salt'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
+    app.config['SQLALCHEMY_DATABASE_URI'] = config.get('Runtime', 'user_database', fallback='sqlite:///')
     app.config['SECURITY_UNAUTHORIZED_VIEW'] = '/login'
     app.config['LOGIN_DISABLED'] = not config.getboolean('Runtime', 'testing')

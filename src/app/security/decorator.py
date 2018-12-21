@@ -7,7 +7,7 @@ def roles_accepted(*roles):
     def wrapper(fn):
         @wraps(fn)
         def decorated_view(*args, **kwargs):
-            if not _get_authentication(args):
+            if not _auth_enabled(args):
                 return fn(*args, **kwargs)
             return original_decorator(*roles)(fn)(*args, **kwargs)
         return decorated_view
@@ -23,7 +23,6 @@ def _get_config_from_endpoint(endpoint_class):
         raise AttributeError('There is no accessible config object')
 
 
-def _get_authentication(args):
+def _auth_enabled(args):
     config = _get_config_from_endpoint(endpoint_class=args[0])
-    authenticate = config.getboolean('Runtime', 'testing')
-    return authenticate
+    return not config.getboolean('Runtime', 'testing')
