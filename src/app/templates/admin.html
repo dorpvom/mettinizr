@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% set active_page = "Admin" %}
+
+{% block body %}
+
+    <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    {% if order_exists %}
+                        <form action="/admin/close_order" style="display:inline">
+                            <button class="btn btn-default" type="submit">
+                                Close order
+                            </button>
+                        </form>
+                        <form action="/admin/cancel_order" style="display:inline">
+                            <button class="btn btn-default" type="submit">
+                                Cancel order
+                            </button>
+                        </form>
+                    {% else %}
+                        <form action="/admin/create_order" style="display:inline">
+                            <button class="btn btn-default" type="submit">
+                                Create order
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="col-md-2">
+                    <a class="btn btn-outline-primary" href="/admin/balance">Change user balance</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+{% endblock %}
