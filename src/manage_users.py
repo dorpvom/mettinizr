@@ -8,8 +8,9 @@ from flask_security import Security
 from flask_sqlalchemy import SQLAlchemy
 from passlib.context import CryptContext
 
-from app.app import APP
+from app.app import APP, CONFIG
 from app.security.authentication import create_user_interface
+from database.mett_store import MettStore
 
 
 def setup_argparse():
@@ -68,12 +69,16 @@ class Actions:
         raise EOFError('Quitting ..')
 
     @staticmethod
-    def create_user(app, interface, db):
+    def create_user(app, interface, db, mett_store):
         user = get_input('username: ')
         assert not Actions._user_exists(app, interface, user), 'user must not exist'
 
         password = getpass.getpass('password: ')
         assert password_is_legal(password), 'password is illegal'
+
+        if not mett_store.account_exists(user):
+            mett_store.create_account(user)
+
         with app.app_context():
             interface.create_user(email=user, password=password)
             db.session.commit()
@@ -85,14 +90,14 @@ class Actions:
         return True if exists else False
 
     @staticmethod
-    def create_role(app, interface, db):
+    def create_role(app, interface, db, _):
         role = get_input('role name: ')
         with app.app_context():
             interface.create_role(name=role)
             db.session.commit()
 
     @staticmethod
-    def add_role_to_user(app, interface, db):
+    def add_role_to_user(app, interface, db, _):
         user = get_input('username: ')
         assert Actions._user_exists(app, interface, user), 'user must exists before adding it to role'
 
@@ -104,7 +109,7 @@ class Actions:
             db.session.commit()
 
     @staticmethod
-    def remove_role_from_user(app, interface, db):
+    def remove_role_from_user(app, interface, db, _):
         user = get_input('username: ')
         assert Actions._user_exists(app, interface, user), 'user must exists before adding it to role'
 
@@ -116,7 +121,7 @@ class Actions:
             db.session.commit()
 
     @staticmethod
-    def delete_user(app, interface, db):
+    def delete_user(app, interface, db, _):
         user = get_input('username: ')
         assert Actions._user_exists(app, interface, user), 'user must exists before adding it to role'
 
@@ -128,7 +133,7 @@ class Actions:
 LEGAL_ACTIONS = [action for action in dir(Actions) if not action.startswith('_')]
 
 
-def prompt_for_actions(app, store, db):
+def prompt_for_actions(app, store, db, mett_store):
     print('''                             _   _   _       _
               _ __ ___   ___| |_| |_(_)_ __ (_)_____ __
              | '_ ` _ \ / _ \ __| __| | '_ \| |_  / '__|
@@ -147,7 +152,7 @@ def prompt_for_actions(app, store, db):
         else:
             try:
                 acting_function = getattr(Actions, action)
-                acting_function(app, store, db)
+                acting_function(app, store, db, mett_store)
             except AssertionError as assertion_error:
                 print('error: {}'.format(assertion_error))
             except EOFError:
@@ -159,11 +164,12 @@ def prompt_for_actions(app, store, db):
 def start_user_management(app):
     db = SQLAlchemy(app)
     Security(app)
-    store = create_user_interface(db)
+    user_store = create_user_interface(db)
+    mett_store = MettStore(CONFIG)
 
     db.create_all()
 
-    prompt_for_actions(app, store, db)
+    prompt_for_actions(app, user_store, db, mett_store)
 
     return 0
 

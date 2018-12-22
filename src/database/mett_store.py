@@ -32,6 +32,12 @@ class MettStore:
 
     # -------------- admin functions --------------
 
+    def create_account(self, name):
+        if self.account_exists(name):
+            raise StorageException('Account {} exists'.format(name))
+        result = self._account.insert_one({'name': name, 'balance': 0.0})
+        return result.inserted_id
+
     def book_money(self, account, amount):
         # Increase balance of account by amount
         self._account.update_one({'_id': account}, {'$inc': {'balance': amount}})
@@ -76,6 +82,9 @@ class MettStore:
 
     # -------------- user functions --------------
 
+    def account_exists(self, name):
+        return self._account.find({'name': name}).count() > 0
+
     def get_account_information(self, account):
         # get (id, name, balance) for account
         pass
@@ -84,7 +93,7 @@ class MettStore:
         # add (account, bun_class) to current order
         current_order = self._get_current_order()
         orders = current_order['orders']
-        orders.append((account, bun_class))
+        orders.append((self._get_account_id_from_name(account), self._resolve_bun(bun_class)))
         self._order.update_one({'_id': current_order['_id']}, {'$set': {'orders': orders}})
 
     def state_purchase(self, account, amount):
@@ -106,7 +115,7 @@ class MettStore:
     def _get_order(self, filter_function):
         # get list of buns ordered by user
         current_order = self._get_current_order()
-        order = {bun_class: 0 for bun_class in self._get_bun_classes()}
+        order = {bun_class: 0 for bun_class in self.list_bun_classes()}
 
         for account, bun in current_order['orders']:
             if filter_function(account):
@@ -117,6 +126,9 @@ class MettStore:
     def get_current_mett_order(self):
         # generate mett order from bun order
         return sum(self._get_mett(bun) for _, bun in self._get_current_order()['orders'])
+
+    def list_bun_classes(self):
+        return [bun['bun_class'] for bun in self._price.find({}, {'bun_class': 1})]
 
     # -------------- internal functions --------------
 
@@ -134,9 +146,6 @@ class MettStore:
         if not mett_account:
             raise StorageException('No matching user record')
         return mett_account['name']
-
-    def _get_bun_classes(self):
-        return [bun['bun_class'] for bun in self._price.find({}, {'bun_class': 1})]
 
     def _resolve_bun(self, item):
         if isinstance(item ,str):

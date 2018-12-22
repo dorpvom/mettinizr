@@ -16,6 +16,6 @@ class DashboardRoutes:
 
     @roles_accepted('user', 'admin')
     def _show_home_dashboard(self):
-        name = current_user.email
-        order = self._mett_store.get_current_user_buns(name)
-        return render_template('dashboard.html', username=name, order=order)
+        user = current_user.email
+        order = self._mett_store.get_current_user_buns(user)
+        return render_template('dashboard.html', username=user, order=order)
