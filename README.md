@@ -13,4 +13,4 @@ sudo -EH pip3 install -r requirements.txt
 (cd src && uwsgi --ini config/uwsgi.config)
 ```
 
-Some code lent from [FACT_core](https://github.com/fkie-cad/FACT_core) licensed unter [GPL v3](https://github.com/fkie-cad/FACT_core/blob/master/LICENSE).
+Some code lent from [FACT_core](https://github.com/fkie-cad/FACT_core) licensed under [GPL v3](https://github.com/fkie-cad/FACT_core/blob/master/LICENSE).
