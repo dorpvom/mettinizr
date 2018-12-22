@@ -40,7 +40,7 @@ class MettStore:
 
     def book_money(self, account, amount):
         # Increase balance of account by amount
-        self._account.update_one({'_id': account}, {'$inc': {'balance': amount}})
+        self._account.update_one({'_id': self._get_account_id_from_name(account)}, {'$inc': {'balance': amount}})
 
     def assign_spare(self, account, bun_class):
         # add (account, bun_class) to order
@@ -52,7 +52,7 @@ class MettStore:
 
     def create_order(self):  # throws Excreption on existing non-expired order
         # create new order
-        if self._order.find({'expired': False}).count() > 0:
+        if self.active_order_exists():
             raise StorageException('Only one current order allowed at all time')
         return self._order.insert_one({'expired': False, 'orders': []}).inserted_id
 
@@ -60,8 +60,8 @@ class MettStore:
         # set expire of current order to true and decrease balances according to order
         pass
 
-    def drop_order(self, order):
-        # drop order by id
+    def drop_order(self, order=None):
+        # drop order by id or current order
         pass
 
     def list_purchases(self, processed=False):
@@ -82,12 +82,19 @@ class MettStore:
 
     # -------------- user functions --------------
 
+    def active_order_exists(self):
+        return self._order.find({'expired': False}).count() > 0
+
     def account_exists(self, name):
         return self._account.find({'name': name}).count() > 0
 
     def get_account_information(self, account):
         # get (id, name, balance) for account
-        pass
+        if not self.account_exists(account):
+            raise StorageException('No existing account {}'.format(account))
+        account_information = self._account.find_one({'name': account})
+        account_information['_id'] = str(account_information['_id'])
+        return account_information
 
     def order_bun(self, account, bun_class):  # throws Exception if no current order
         # add (account, bun_class) to current order

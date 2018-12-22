@@ -1,6 +1,14 @@
 Here be dragons
 
-Start with
+## Setup:
+Assuming you have python3 and pip3 installed.
+
+```sh
+sudo apt-get install -f gcc libpython3-dev mongodb-server
+sudo -EH pip3 install -r requirements.txt
+```
+
+## Start:
 ```sh
 (cd src && uwsgi --ini config/uwsgi.config)
 ```

@@ -5,28 +5,33 @@
 {% block body %}
 
     <div class="container">
-        <p>Welcome {{ username }}! This is home.</p>
+        <p><br />Welcome {{ username }}! This is home.<br />Your current balance is {{ balance }}.</p>
 
-        <div class="row">
-            <div class="col col-md-2">
-                <table class="table">
-                    <thead class="thead-light">
-                        <tr>
-                            <th scope="col">Bun</th>
-                            <th scope="col">#</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for bun in order %}
+        {% if order_exists %}
+            <div class="row">
+                <div class="col col-md-2">
+                    <table class="table">
+                        <thead class="thead-light">
                             <tr>
-                                <td scope="row">{{ bun }}</td>
-                                <td>{{ order[bun] }}</td>
+                                <th scope="col">Bun</th>
+                                <th scope="col">#</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {% for bun in order %}
+                                <tr>
+                                    <td scope="row">{{ bun }}</td>
+                                    <td>{{ order[bun] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        {% else %}
+            <p class="alert">There is no current order!</p>
+        {% endif %}
+
     </div>
 
 {% endblock %}
