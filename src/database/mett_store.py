@@ -113,11 +113,7 @@ class MettStore:
 
     def state_purchase(self, account, amount, purpose):
         # add account, amount, purpose as non processed purchase
-        try:
-            result = self._purchase.insert_one({'account': account, 'price': amount, 'purpose': purpose, 'processed': False})
-        except Exception as exception:
-            problem = str(exception)
-            return None
+        result = self._purchase.insert_one({'account': account, 'price': amount, 'purpose': purpose, 'processed': False})
         return result.inserted_id
 
     def get_order_history(self, account):
