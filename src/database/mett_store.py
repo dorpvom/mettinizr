@@ -2,9 +2,10 @@
 account: id, name, balance (id private_key)
 order: id, expired, orders (orders list of (account, bun), with account foreign_key on account.id and bun foreign_key on price.id)
 price: id, bun_class, price, mett
-purchase: id, account, price, processed (account foreign_key on accound.id)
+purchase: id, account, price, purpose, processed (account foreign_key on accound.id)
 '''
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 
 class StorageException(Exception):
@@ -22,6 +23,7 @@ class MettStore:
         self._account = self._mett_base.account
         self._order = self._mett_base.order
         self._price = self._mett_base.price
+        self._purchase = self._mett_base.purchase
 
         self._init_tables()
 
@@ -66,15 +68,21 @@ class MettStore:
 
     def list_purchases(self, processed=False):
         # list purchases, if processed is false only those that have not been authorized or declined
-        pass
+        query = {} if processed else {'processed': False}
+        purchases = list(self._purchase.find(query, {'account': 1, 'price': 1, '_id': 1, 'purpose': 1}))
+        for purchase in purchases:
+            purchase['_id'] = str(purchase['_id'])
+        return purchases
 
-    def authorize_purchase(self, purchase):
+    def authorize_purchase(self, purchase_id):
         # add purchase.amount to purchase.account.balance
-        pass
+        purchase = self._purchase.find_one({'_id': ObjectId(purchase_id)})
+        self.book_money(purchase['account'], float(purchase['price']))
+        self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': True}})
 
-    def decline_purchase(self, purchase):
+    def decline_purchase(self, purchase_id):
         # drop purchase
-        pass
+        self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': True}})
 
     def change_mett_formula(self, bun, amount):
         # set mett_formula.amount for referenced bun
@@ -103,9 +111,10 @@ class MettStore:
         orders.append((self._get_account_id_from_name(account), self._resolve_bun(bun_class)))
         self._order.update_one({'_id': current_order['_id']}, {'$set': {'orders': orders}})
 
-    def state_purchase(self, account, amount):
-        # add account, amount as non processed purchase
-        pass
+    def state_purchase(self, account, amount, purpose):
+        # add account, amount, purpose as non processed purchase
+        result = self._purchase.insert_one({'account': account, 'price': amount, 'purpose': purpose, 'processed': False})
+        return result.inserted_id
 
     def get_order_history(self, account):
         # get list of (order_id, orders) where orders is slice of orders ordered by account

@@ -15,10 +15,7 @@ class OrderRoutes:
         self._mett_store = MettStore(config=self._config)
 
         self._app.add_url_rule('/order', 'order', self._show_order_home, methods=['GET', 'POST'])
-
-    @roles_accepted('user', 'admin')
-    def _show_current_order(self):
-        return render_template('order/current.html', orders=[1,2,3,4])
+        self._app.add_url_rule('/order/purchase', 'order/purchase', self._state_purpose, methods=['GET', 'POST'])
 
     @roles_accepted('user', 'admin')
     def _show_order_home(self):
@@ -30,9 +27,25 @@ class OrderRoutes:
 
         return render_template('order.html', bun_classes=self._mett_store.list_bun_classes())
 
+    @roles_accepted('user', 'admin')
+    def _state_purpose(self):
+        if request.method == 'POST':
+            transaction = _get_purchase_information(request)
+            self._mett_store.state_purchase(current_user.email, float(transaction['amount']), transaction['purpose'])
+            return render_template('order.html', bun_classes=self._mett_store.list_bun_classes())
+
+        return render_template('order/purchase.html')
+
 
 def _get_order_from_request(request):
     return {
         'bun_class': request.form['orderClass'],
         'amount': request.form['orderAmount']
+    }
+
+
+def _get_purchase_information(request):
+    return {
+        'purpose': request.form['purpose'],
+        'amount': request.form['amount']
     }

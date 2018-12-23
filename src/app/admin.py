@@ -22,8 +22,8 @@ class AdminRoutes:
         self._app.add_url_rule('/admin/balance', 'admin/balance', self._change_user_balance, methods=['GET', 'POST'])
 
         self._app.add_url_rule('/admin/purchase', 'admin/purchase', self._list_purchases, methods=['GET'])
-        self._app.add_url_rule('/admin/purchase/authorize/<purchase_id>', 'admin/purchase/authorize/<purchase_id>', self._list_purchases, methods=['PUT'])
-        self._app.add_url_rule('/admin/purchase/decline/<purchase_id>', 'admin/purchase/decline/<purchase_id>', self._list_purchases, methods=['PUT'])
+        self._app.add_url_rule('/admin/purchase/authorize/<purchase_id>', 'admin/purchase/authorize/<purchase_id>', self._authorize_purchase, methods=['GET'])
+        self._app.add_url_rule('/admin/purchase/decline/<purchase_id>', 'admin/purchase/decline/<purchase_id>', self._decline_purchase, methods=['GET'])
 
     @roles_accepted('admin')
     def _show_admin_home(self):
@@ -56,15 +56,18 @@ class AdminRoutes:
 
     @roles_accepted('admin')
     def _list_purchases(self):
-        return render_template('admin/purchase.html', purchases=self._mett_store.list_purchases())
+        purchases = self._mett_store.list_purchases()
+        return render_template('admin/purchase.html', purchases=purchases)
 
     @roles_accepted('admin')
     def _authorize_purchase(self, purchase_id):
-        pass
+        self._mett_store.authorize_purchase(purchase_id)
+        return self._list_purchases()
 
     @roles_accepted('admin')
     def _decline_purchase(self, purchase_id):
-        pass
+        self._mett_store.decline_purchase(purchase_id)
+        return self._list_purchases()
 
 
 def _get_change_of_balance(request):
