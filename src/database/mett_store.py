@@ -74,13 +74,15 @@ class MettStore:
             purchase['_id'] = str(purchase['_id'])
         return purchases
 
-    def authorize_purchase(self, purchase):
+    def authorize_purchase(self, purchase_id):
         # add purchase.amount to purchase.account.balance
-        pass
+        purchase = self._purchase.find_one({'_id': ObjectId(purchase_id)})
+        self.book_money(purchase['account'], float(purchase['price']))
+        self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': True}})
 
-    def decline_purchase(self, purchase):
+    def decline_purchase(self, purchase_id):
         # drop purchase
-        pass
+        self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': True}})
 
     def change_mett_formula(self, bun, amount):
         # set mett_formula.amount for referenced bun
