@@ -1,8 +1,8 @@
 '''
-account: id, name, balance (id private_key)
+account: id, name, balance (name private_key)
 order: id, expired, orders (orders list of (account, bun), with account foreign_key on account.id and bun foreign_key on price.id)
-price: id, bun_class, price, mett
-purchase: id, account, price, purpose, processed (account foreign_key on accound.id)
+buns: id, bun_class, price, mett
+purchase: id, account, price, purpose, processed (account foreign_key on accound.name)
 '''
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -22,15 +22,15 @@ class MettStore:
 
         self._account = self._mett_base.account
         self._order = self._mett_base.order
-        self._price = self._mett_base.price
+        self._buns = self._mett_base.price
         self._purchase = self._mett_base.purchase
 
         self._init_tables()
 
     def _init_tables(self):
-        if self._price.find().count() == 0:
+        if self._buns.find().count() == 0:
             for bun in self._config.get('Mett', 'default_buns').split(','):
-                self._price.insert_one({'bun_class': bun.strip(), 'price': self._config.get('Mett', 'default_price'), 'mett': self._config.get('Mett', 'default_grams')})
+                self._buns.insert_one({'bun_class': bun.strip(), 'price': self._config.get('Mett', 'default_price'), 'mett': self._config.get('Mett', 'default_grams')})
 
     # -------------- admin functions --------------
 
@@ -42,7 +42,7 @@ class MettStore:
 
     def book_money(self, account, amount):
         # Increase balance of account by amount
-        self._account.update_one({'_id': self._get_account_id_from_name(account)}, {'$inc': {'balance': amount}})
+        self._account.update_one({'name': account}, {'$inc': {'balance': amount}})
 
     def assign_spare(self, account, bun_class):
         # add (account, bun_class) to order
@@ -60,11 +60,18 @@ class MettStore:
 
     def expire_order(self):
         # set expire of current order to true and decrease balances according to order
-        pass
+        current_order = self._get_current_order()
+        for account, bun in current_order['orders']:
+            self._charge_bun(account, bun)
+        self._order.update_one({'expired': False}, {'$set': {'expired': True}})
 
     def drop_order(self, order=None):
+        # TODO split in two functions
         # drop order by id or current order
-        pass
+        if order:
+            self._order.delete_one({'_id': ObjectId(order)})
+        else:
+            self._order.delete_one({'expired': False})
 
     def list_purchases(self, processed=False):
         # list purchases, if processed is false only those that have not been authorized or declined
@@ -116,9 +123,25 @@ class MettStore:
         result = self._purchase.insert_one({'account': account, 'price': amount, 'purpose': purpose, 'processed': False})
         return result.inserted_id
 
-    def get_order_history(self, account):
+    def get_order_history(self, user):
+        # TODO Please refactor
         # get list of (order_id, orders) where orders is slice of orders ordered by account
-        pass
+        orders = list(self._order.find({'expired': True}))
+        user_has_ordered, flag = 0, False
+        order = {bun_class: 0 for bun_class in self.list_bun_classes()}
+        for former_order in orders:
+            for account, bun in former_order['orders']:
+                if account == self._get_account_id_from_name(user):
+                    order[self._resolve_bun(bun)] += 1
+                    flag = True
+            if flag:
+                user_has_ordered += 1
+                flag = False
+        if user_has_ordered > 0:
+            for bun in order:
+                order[bun] = order[bun] / user_has_ordered
+        mean_over_all = sum(order[bun] for bun in order)
+        return order, mean_over_all
 
     def get_current_user_buns(self, user):
         # get list of buns ordered by user
@@ -144,12 +167,12 @@ class MettStore:
         return sum(self._get_mett(bun) for _, bun in self._get_current_order()['orders'])
 
     def list_bun_classes(self):
-        return [bun['bun_class'] for bun in self._price.find({}, {'bun_class': 1})]
+        return [bun['bun_class'] for bun in self._buns.find({}, {'bun_class': 1})]
 
     # -------------- internal functions --------------
 
     def _get_mett(self, bun):
-        return self._price.find_one({'_id': bun}, {'mett': 1})['mett']
+        return self._buns.find_one({'_id': bun}, {'mett': 1})['mett']
 
     def _get_account_id_from_name(self, name):
         mett_account = self._account.find_one({'name': name})
@@ -164,10 +187,10 @@ class MettStore:
         return mett_account['name']
 
     def _resolve_bun(self, item):
-        if isinstance(item ,str):
-            bun_class = self._price.find_one({'bun_class': item}, {'_id': 1})
+        if isinstance(item, str):
+            bun_class = self._buns.find_one({'bun_class': item}, {'_id': 1})
             return bun_class['_id']
-        bun_class = self._price.find_one({'_id': item}, {'bun_class': 1})
+        bun_class = self._buns.find_one({'_id': item}, {'bun_class': 1})
         return bun_class['bun_class']
 
     def _get_current_order(self):
@@ -175,3 +198,7 @@ class MettStore:
         if not current_order:
             raise StorageException('No current order')
         return current_order
+
+    def _charge_bun(self, account, bun):
+        bun_price = self._buns.find_one({'_id': bun})
+        self._account.update_one({'_id': account}, {'$inc': {'balance': 0 - float(bun_price['price'])}})

@@ -15,9 +15,9 @@ class AdminRoutes:
 
         self._app.add_url_rule('/admin', 'admin', self._show_admin_home, methods=['GET'])
 
-        self._app.add_url_rule('/admin/create_order', 'admin/create_order', self._create_order, methods=['PUT'])
-        self._app.add_url_rule('/admin/cancel_order', 'admin/cancel_order', self._cancel_order, methods=['PUT'])
-        self._app.add_url_rule('/admin/close_order', 'admin/close_order', self._close_order, methods=['PUT'])
+        self._app.add_url_rule('/admin/create_order', 'admin/create_order', self._create_order, methods=['GET'])
+        self._app.add_url_rule('/admin/cancel_order', 'admin/cancel_order', self._cancel_order, methods=['GET'])
+        self._app.add_url_rule('/admin/close_order', 'admin/close_order', self._close_order, methods=['GET'])
 
         self._app.add_url_rule('/admin/balance', 'admin/balance', self._change_user_balance, methods=['GET', 'POST'])
 

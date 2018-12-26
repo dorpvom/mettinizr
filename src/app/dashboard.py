@@ -27,4 +27,5 @@ class DashboardRoutes:
         except StorageException:
             order_exists = False
 
-        return render_template('dashboard.html', order_exists=order_exists, username=user, order=order, balance=information['balance'])
+        order_history, mean_buns = self._mett_store.get_order_history(user)
+        return render_template('dashboard.html', order_exists=order_exists, username=user, order=order, balance=information['balance'], history=order_history, mean_buns=mean_buns)
