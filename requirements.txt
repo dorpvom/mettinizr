@@ -6,3 +6,4 @@ flask_security
 flask_sqlalchemy
 bcrypt
 uwsgi
+bson
