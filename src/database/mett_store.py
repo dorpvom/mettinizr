@@ -46,7 +46,7 @@ class MettStore:
 
     def assign_spare(self, account, bun_class):
         # add (account, bun_class) to order
-        pass
+        self.order_bun(account, bun_class)
 
     def list_accounts(self):
         # return list of (accound.id, account.name) tuples
@@ -93,7 +93,15 @@ class MettStore:
 
     def change_mett_formula(self, bun, amount):
         # set mett_formula.amount for referenced bun
-        pass
+        if self._buns.find({'bun_class': bun}).count() < 1:
+            raise StorageException('Bun does not exist')
+        self._buns.update_one({'bun_class': bun}, {'$set': {'mett': float(amount)}})
+
+    def change_bun_price(self, bun, price):
+        # set mett_formula.amount for referenced bun
+        if self._buns.find({'bun_class': bun}).count() < 1:
+            raise StorageException('Bun does not exist')
+        self._buns.update_one({'bun_class': bun}, {'$set': {'price': float(price)}})
 
     # -------------- user functions --------------
 

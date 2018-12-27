@@ -44,12 +44,12 @@
                             {% for bun in history %}
                                 <tr>
                                     <td scope="row">{{ bun }}</td>
-                                    <td>{{ history[bun] }}</td>
+                                    <td>{{ history[bun] | round(2) }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                     </table>
-                    <p class="alert">You have ordered a mean of {{ mean_buns }} buns.</p>
+                    <p class="alert">You have ordered a mean of {{ mean_buns | round(2) }} buns.</p>
                 </div>
             </div>
     </div>

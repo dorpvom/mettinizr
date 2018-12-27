@@ -20,6 +20,7 @@ class AdminRoutes:
         self._app.add_url_rule('/admin/close_order', 'admin/close_order', self._close_order, methods=['GET'])
 
         self._app.add_url_rule('/admin/balance', 'admin/balance', self._change_user_balance, methods=['GET', 'POST'])
+        self._app.add_url_rule('/admin/formula', 'admin/formula', self._change_mett_formula, methods=['GET', 'POST'])
 
         self._app.add_url_rule('/admin/purchase', 'admin/purchase', self._list_purchases, methods=['GET'])
         self._app.add_url_rule('/admin/purchase/authorize/<purchase_id>', 'admin/purchase/authorize/<purchase_id>', self._authorize_purchase, methods=['GET'])
@@ -68,6 +69,21 @@ class AdminRoutes:
     def _decline_purchase(self, purchase_id):
         self._mett_store.decline_purchase(purchase_id)
         return self._list_purchases()
+
+    @roles_accepted('admin')
+    def _change_mett_formula(self):
+        if request.method == 'POST':
+            self._apply_change_to_formula(request)
+
+        return render_template('admin/formula.html', bun_classes=self._mett_store.list_bun_classes())
+
+    def _apply_change_to_formula(self, request):
+        if 'price' in request.form:
+            self._mett_store.change_bun_price(request.form['bun'], request.form['price'])
+        elif 'amount' in request.form:
+            self._mett_store.change_mett_formula(request.form['bun'], request.form['amount'])
+        else:
+            raise RuntimeError('No change applied')
 
 
 def _get_change_of_balance(request):
