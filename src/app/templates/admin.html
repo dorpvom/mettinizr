@@ -4,36 +4,42 @@
 
 {% block body %}
 
+    <br /><br />
+
     <div class="container">
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3 border border-secondary rounded">
+                    <br />
                     {% if order_exists %}
                         <form action="/admin/close_order" style="display:inline">
-                            <button class="btn btn-default" type="submit">
-                                Close order
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="fas fa-check"></i> Close order
                             </button>
                         </form>
+                        <br /><br />
                         <form action="/admin/cancel_order" style="display:inline">
-                            <button class="btn btn-default" type="submit">
-                                Cancel order
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="fas fa-ban"></i> Cancel order
                             </button>
                         </form>
                     {% else %}
                         <form action="/admin/create_order" style="display:inline">
-                            <button class="btn btn-default" type="submit">
-                                Create order
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="fas fa-plus"></i> Create order
                             </button>
                         </form>
                     {% endif %}
+                    <br /><br />
                 </div>
-                <div class="col-md-2">
-                    <a class="btn btn-outline-primary" href="/admin/balance">Change user balance</a>
-                </div>
-                <div class="col-md-2">
-                    <a class="btn btn-outline-primary" href="/admin/formula">Change mett formula</a>
-                </div>
-                <div class="col-md-2">
-                    <a class="btn btn-outline-primary" href="/admin/purchase">Show purchases</a>
+                <div class="col-md-1">&nbsp;</div>
+                <div class="col-md-3 border border-primary rounded">
+                    <br />
+                    <a class="btn btn-outline-primary" href="/admin/balance"><i class="fas fa-dollar-sign"></i> Change user balance</a>
+                    <br /><br />
+                    <a class="btn btn-outline-primary" href="/admin/formula"><i class="fas fa-calculator"></i> Change mett formula</a>
+                    <br /><br />
+                    <a class="btn btn-outline-primary" href="/admin/purchase"><i class="fas fa-list"></i> Show purchases</a>
+                    <br /><br />
                 </div>
             </div>
         </form>

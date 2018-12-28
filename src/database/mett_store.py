@@ -180,7 +180,7 @@ class MettStore:
     # -------------- internal functions --------------
 
     def _get_mett(self, bun):
-        return self._buns.find_one({'_id': bun}, {'mett': 1})['mett']
+        return float(self._buns.find_one({'_id': bun}, {'mett': 1})['mett'])
 
     def _get_account_id_from_name(self, name):
         mett_account = self._account.find_one({'name': name})
