@@ -14,3 +14,4 @@ sudo -EH pip3 install -r requirements.txt
 ```
 
 Some code lent from [FACT_core](https://github.com/fkie-cad/FACT_core) licensed under [GPL v3](https://github.com/fkie-cad/FACT_core/blob/master/LICENSE).
+Web Content is designed using [Bootstrap](https://getbootstrap.com/) and [jQuery](https://jquery.com/).
