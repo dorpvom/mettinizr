@@ -7,7 +7,7 @@
     <div class="container">
         {% if order_exists %}
             <form method=post enctype=multipart/form-data action="">
-                <div class="row">
+                <div class="row border rounded">
                     <div class="form-group col-md-2">
                         <label for="orderAmount">Number of buns</label>
                         <input type="number" step="1" min="0" class="form-control" id="orderAmount" name="orderAmount">
@@ -21,7 +21,7 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" value=submit class="btn btn-primary">Order!</button>
+                        <button type="submit" value=submit class="btn btn-outline-primary"><i class="fas fa-cart-plus"></i> Order</button>
                     </div>
                 </div>
             </form>
@@ -52,7 +52,7 @@
         {% endif %}
         <div class="row">
             <div class="col-md-4">
-                <a class="btn btn-outline-primary" href="/order/purchase">State purchase</a>
+                <a class="btn btn-outline-primary" href="/order/purchase"><i class="fas fa-shopping-basket"></i> State purchase</a>
             </div>
         </div>
     </div>

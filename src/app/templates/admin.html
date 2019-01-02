@@ -4,11 +4,9 @@
 
 {% block body %}
 
-    <br /><br />
-
     <div class="container">
             <div class="row">
-                <div class="col-md-3 border border-secondary rounded">
+                <div class="col-md-auto border border-secondary rounded">
                     <br />
                     {% if order_exists %}
                         <form action="/admin/close_order" style="display:inline">
@@ -32,7 +30,7 @@
                     <br /><br />
                 </div>
                 <div class="col-md-1">&nbsp;</div>
-                <div class="col-md-3 border border-primary rounded">
+                <div class="col-md-auto border border-primary rounded">
                     <br />
                     <a class="btn btn-outline-primary" href="/admin/balance"><i class="fas fa-dollar-sign"></i> Change user balance</a>
                     <br /><br />
