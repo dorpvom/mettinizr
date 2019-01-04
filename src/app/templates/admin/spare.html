@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% set active_page = "Admin" %}
+
+{% block body %}
+
+    <div class="container">
+        <form method=post enctype=multipart/form-data action="" id="mett">
+            <div class="row">
+                <div class="form-group col-md-2">
+                    <label for="bun">Bun</label>
+                    <select class="form-control" id="bun" name="bun">
+                        {% for bun in bun_classes %}
+                            <option>{{ bun }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="username">User</label>
+                    <select class="form-control" id="username" name="username">
+                        {% for user in users %}
+                            <option>{{ user }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <button type="submit" value=submit class="btn btn-outline-primary"><i class="fas fa-edit"></i> Assign</button>
+            </div>
+        </form>
+    </div>
+
+{% endblock %}
