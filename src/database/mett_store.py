@@ -44,10 +44,6 @@ class MettStore:
         # Increase balance of account by amount
         self._account.update_one({'name': account}, {'$inc': {'balance': amount}})
 
-    def assign_spare(self, account, bun_class):
-        # add (account, bun_class) to order
-        self.order_bun(account, bun_class)
-
     def list_accounts(self):
         # return list of (accound.id, account.name) tuples
         return [(entry['_id'], entry['name']) for entry in self._account.find()]
@@ -103,6 +99,9 @@ class MettStore:
             raise StorageException('Bun does not exist')
         self._buns.update_one({'bun_class': bun}, {'$set': {'price': float(price)}})
 
+    def assign_spare(self, bun_class, user):  # TODO change to use of names not id
+        self._charge_bun(self._get_account_id_from_name(user), self._resolve_bun(bun_class))
+
     # -------------- user functions --------------
 
     def active_order_exists(self):
@@ -157,7 +156,10 @@ class MettStore:
 
     def get_current_bun_order(self):
         # get aggregated current bun order
-        return self._get_order(lambda _: True)
+        bun_order = self._get_order(lambda _: True)
+        for spare in self._calculate_spares():
+            bun_order[spare] += 1
+        return bun_order
 
     def _get_order(self, filter_function):
         # get list of buns ordered by user
@@ -172,29 +174,36 @@ class MettStore:
 
     def get_current_mett_order(self):
         # generate mett order from bun order
-        return sum(self._get_mett(bun) for _, bun in self._get_current_order()['orders'])
+        bun_order = self.get_current_bun_order()
+        return sum(self._get_mett(self._resolve_bun(bun_class)) * bun_order[bun_class] for bun_class in bun_order)
 
     def list_bun_classes(self):
         return [bun['bun_class'] for bun in self._buns.find({}, {'bun_class': 1})]
 
     # -------------- internal functions --------------
 
-    def _get_mett(self, bun):
+    def _calculate_spares(self):
+        current_bun_order = self._get_order(lambda _: True)
+        if 'Roeggelchen' in current_bun_order and (current_bun_order['Roeggelchen'] % 2) == 1:
+            return ['Roeggelchen', 'Weizen']
+        return ['Weizen', 'Weizen']
+
+    def _get_mett(self, bun):  # TODO change to use of names not id
         return float(self._buns.find_one({'_id': bun}, {'mett': 1})['mett'])
 
-    def _get_account_id_from_name(self, name):
+    def _get_account_id_from_name(self, name):  # TODO change to use of names not id
         mett_account = self._account.find_one({'name': name})
         if not mett_account:
             raise StorageException('No matching user record')
         return mett_account['_id']
 
-    def _get_account_name_from_id(self, account_id):
+    def _get_account_name_from_id(self, account_id):  # TODO change to use of names not id
         mett_account = self._account.find_one({'_id': account_id})
         if not mett_account:
             raise StorageException('No matching user record')
         return mett_account['name']
 
-    def _resolve_bun(self, item):
+    def _resolve_bun(self, item):  # TODO change to use of names not id
         if isinstance(item, str):
             bun_class = self._buns.find_one({'bun_class': item}, {'_id': 1})
             return bun_class['_id']
@@ -207,6 +216,6 @@ class MettStore:
             raise StorageException('No current order')
         return current_order
 
-    def _charge_bun(self, account, bun):
+    def _charge_bun(self, account, bun):  # TODO change to use of names not id
         bun_price = self._buns.find_one({'_id': bun})
         self._account.update_one({'_id': account}, {'$inc': {'balance': 0 - float(bun_price['price'])}})

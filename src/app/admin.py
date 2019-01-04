@@ -21,6 +21,7 @@ class AdminRoutes:
 
         self._app.add_url_rule('/admin/balance', 'admin/balance', self._change_user_balance, methods=['GET', 'POST'])
         self._app.add_url_rule('/admin/formula', 'admin/formula', self._change_mett_formula, methods=['GET', 'POST'])
+        self._app.add_url_rule('/admin/spare', 'admin/spare', self._assign_spare, methods=['GET', 'POST'])
 
         self._app.add_url_rule('/admin/purchase', 'admin/purchase', self._list_purchases, methods=['GET'])
         self._app.add_url_rule('/admin/purchase/authorize/<purchase_id>', 'admin/purchase/authorize/<purchase_id>', self._authorize_purchase, methods=['GET'])
@@ -76,6 +77,13 @@ class AdminRoutes:
             self._apply_change_to_formula(request)
 
         return render_template('admin/formula.html', bun_classes=self._mett_store.list_bun_classes())
+
+    @roles_accepted('admin')
+    def _assign_spare(self):
+        if request.method == 'POST':
+            self._mett_store.assign_spare(bun_class=request.form['bun'], user=request.form['username'])
+            return render_template('admin.html', order_exists=self._mett_store.active_order_exists())
+        return render_template('admin/spare.html', bun_classes=self._mett_store.list_bun_classes(), users=[name for _id, name in self._mett_store.list_accounts()])
 
     def _apply_change_to_formula(self, request):
         if 'price' in request.form:
