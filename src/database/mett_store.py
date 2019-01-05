@@ -28,7 +28,7 @@ class MettStore:
         self._init_tables()
 
     def _init_tables(self):
-        if self._buns.find().count() == 0:
+        if self._buns.count_documents({}) == 0:
             for bun in self._config.get('Mett', 'default_buns').split(','):
                 self._buns.insert_one({'bun_class': bun.strip(), 'price': self._config.get('Mett', 'default_price'), 'mett': self._config.get('Mett', 'default_grams')})
 
@@ -89,13 +89,13 @@ class MettStore:
 
     def change_mett_formula(self, bun, amount):
         # set mett_formula.amount for referenced bun
-        if self._buns.find({'bun_class': bun}).count() < 1:
+        if self._buns.count_documents({'bun_class': bun}) < 1:
             raise StorageException('Bun does not exist')
         self._buns.update_one({'bun_class': bun}, {'$set': {'mett': float(amount)}})
 
     def change_bun_price(self, bun, price):
         # set mett_formula.amount for referenced bun
-        if self._buns.find({'bun_class': bun}).count() < 1:
+        if self._buns.count_documents({'bun_class': bun}) < 1:
             raise StorageException('Bun does not exist')
         self._buns.update_one({'bun_class': bun}, {'$set': {'price': float(price)}})
 
@@ -105,10 +105,10 @@ class MettStore:
     # -------------- user functions --------------
 
     def active_order_exists(self):
-        return self._order.find({'expired': False}).count() > 0
+        return self._order.count_documents({'expired': False}) > 0
 
     def account_exists(self, name):
-        return self._account.find({'name': name}).count() > 0
+        return self._account.count_documents({'name': name}) > 0
 
     def get_account_information(self, account):
         # get (id, name, balance) for account
