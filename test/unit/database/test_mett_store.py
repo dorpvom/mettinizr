@@ -45,12 +45,24 @@ def test_create_order(mock_store):
     assert mock_store.create_order()
 
 
+def test_active_order_exists(mock_store):
+    assert not mock_store.active_order_exists()
+    mock_store._order.insert_one({'orders': [], 'expired': False})
+    assert mock_store.active_order_exists()
+
+
 def test_create_account(mock_store):
     assert mock_store._account.count_documents({'name': 'account_test'}) == 0
     mock_store.create_account('account_test')
     assert mock_store._account.count_documents({'name': 'account_test'}) == 1
     with pytest.raises(StorageException):
         mock_store.create_account('account_test')
+
+
+def test_account_exists(mock_store):
+    assert not mock_store.account_exists('account_test')
+    mock_store._account.insert_one({'name': 'account_test', 'balance': 5.0})
+    assert mock_store.account_exists('account_test')
 
 
 def test_expire_order(mock_store):
@@ -95,3 +107,35 @@ def test_decline_purchase(mock_store):
     mock_store.decline_purchase(purchase_id)
     assert mock_store._purchase.find_one({'_id': purchase_id})['processed']
     assert mock_store._account.find_one({'name': 'test'})['balance'] == 0.0
+
+
+def test_list_purchases(mock_store):
+    mock_store.create_account('test')
+    purchase_id = mock_store._purchase.insert_one({'account': 'test', 'price': 1.23, 'purpose': 'any', 'processed': False}).inserted_id
+    purchases = mock_store.list_purchases()
+    assert len(purchases) == 1
+    assert purchases[0]['_id'] == str(purchase_id) and purchases[0]['purpose'] == 'any'
+
+
+def test_change_mett_formula(mock_store):
+    assert mock_store._buns.find_one({'bun_class': 'Weizen'})['mett'] == 66.0
+    mock_store.change_mett_formula('Weizen', 80.0)
+    assert mock_store._buns.find_one({'bun_class': 'Weizen'})['mett'] == 80.0
+
+    with pytest.raises(StorageException):
+        mock_store.change_mett_formula('NoBun', 80.0)
+
+
+def test_change_bun_price(mock_store):
+    assert mock_store._buns.find_one({'bun_class': 'Weizen'})['price'] == 1.0
+    mock_store.change_bun_price('Weizen', 1.5)
+    assert mock_store._buns.find_one({'bun_class': 'Weizen'})['price'] == 1.5
+
+    with pytest.raises(StorageException):
+        mock_store.change_bun_price('NoBun', 1.5)
+
+
+def test_assign_spare(mock_store):
+    mock_store._account.insert_one({'name': 'test', 'balance': 2.0})
+    mock_store.assign_spare('Weizen', 'test')
+    assert mock_store._account.find_one({'name': 'test'})['balance'] == 1.0

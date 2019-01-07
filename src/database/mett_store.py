@@ -30,7 +30,7 @@ class MettStore:
     def _init_tables(self):
         if self._buns.count_documents({}) == 0:
             for bun in self._config.get('Mett', 'default_buns').split(','):
-                self._buns.insert_one({'bun_class': bun.strip(), 'price': self._config.get('Mett', 'default_price'), 'mett': self._config.get('Mett', 'default_grams')})
+                self._buns.insert_one({'bun_class': bun.strip(), 'price': self._config.getfloat('Mett', 'default_price'), 'mett': self._config.getfloat('Mett', 'default_grams')})
 
     # -------------- admin functions --------------
 
