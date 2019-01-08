@@ -34,6 +34,50 @@ def test_list_accounts(mock_store):
     assert mock_store.list_accounts() == [(_id1, 'test_one'), (_id2, 'test_two')]
 
 
+def test_create_account(mock_store):
+    assert mock_store._account.count_documents({'name': 'account_test'}) == 0
+    mock_store.create_account('account_test')
+    assert mock_store._account.count_documents({'name': 'account_test'}) == 1
+    with pytest.raises(StorageException):
+        mock_store.create_account('account_test')
+
+
+def test_account_exists(mock_store):
+    assert not mock_store.account_exists('account_test')
+    mock_store._account.insert_one({'name': 'account_test', 'balance': 5.0})
+    assert mock_store.account_exists('account_test')
+
+
+def test_get_account_information(mock_store):
+    with pytest.raises(StorageException):
+        mock_store.get_account_information('account_test')
+
+    account_id = mock_store._account.insert_one({'name': 'account_test', 'balance': 5.0}).inserted_id
+    account_information = mock_store.get_account_information('account_test')
+
+    assert account_information == {'name': 'account_test', 'balance': 5.0, '_id': str(account_id)}
+
+
+def test_resolve_account(mock_store):
+    with pytest.raises(StorageException):
+        assert mock_store._get_account_name_from_id('some_id')
+
+    with pytest.raises(StorageException):
+        assert mock_store._get_account_id_from_name('account_test')
+
+    account_id = mock_store._account.insert_one({'name': 'account_test', 'balance': 0.0}).inserted_id
+
+    assert mock_store._get_account_name_from_id(account_id) == 'account_test'
+    assert mock_store._get_account_id_from_name('account_test') == account_id
+
+
+def test_resolve_bun(mock_store):
+    bun_id = mock_store._resolve_bun('Roggen')
+
+    assert mock_store._resolve_bun(bun_id) == 'Roggen'
+    assert mock_store._buns.find_one({'bun_class': 'Roggen'})['_id'] == bun_id
+
+
 def test_create_order(mock_store):
     order_id = mock_store.create_order()
     assert order_id
@@ -49,20 +93,6 @@ def test_active_order_exists(mock_store):
     assert not mock_store.active_order_exists()
     mock_store._order.insert_one({'orders': [], 'expired': False})
     assert mock_store.active_order_exists()
-
-
-def test_create_account(mock_store):
-    assert mock_store._account.count_documents({'name': 'account_test'}) == 0
-    mock_store.create_account('account_test')
-    assert mock_store._account.count_documents({'name': 'account_test'}) == 1
-    with pytest.raises(StorageException):
-        mock_store.create_account('account_test')
-
-
-def test_account_exists(mock_store):
-    assert not mock_store.account_exists('account_test')
-    mock_store._account.insert_one({'name': 'account_test', 'balance': 5.0})
-    assert mock_store.account_exists('account_test')
 
 
 def test_expire_order(mock_store):
@@ -91,6 +121,14 @@ def test_drop_order_id(mock_store):
 
     assert not mock_store._order.find_one({'_id': order_id_one})
     assert mock_store._order.find_one({'_id': order_id_two})
+
+
+def test_state_purchase(mock_store):
+    mock_store._account.insert_one({'name': 'purchase_test', 'balance': 0.0})
+
+    assert not mock_store._purchase.find_one({'purpose': 'absolution'})
+    mock_store.state_purchase('purchase_test', 1.23, 'absolution')
+    assert mock_store._purchase.find_one({'purpose': 'absolution'})
 
 
 def test_authorize_purchase(mock_store):
@@ -139,3 +177,38 @@ def test_assign_spare(mock_store):
     mock_store._account.insert_one({'name': 'test', 'balance': 2.0})
     mock_store.assign_spare('Weizen', 'test')
     assert mock_store._account.find_one({'name': 'test'})['balance'] == 1.0
+
+
+def test_get_order(mock_store):
+    with pytest.raises(StorageException):
+        mock_store.get_current_bun_order()
+
+    account_id_1 = mock_store._account.insert_one({'name': 'order_test_1', 'balance': 0.0}).inserted_id
+    account_id_2 = mock_store._account.insert_one({'name': 'order_test_2', 'balance': 0.0}).inserted_id
+    weizen_id = mock_store._buns.find_one({'bun_class': 'Weizen'})['_id']
+    mock_store._order.insert_one({'orders': [(account_id_1, weizen_id), (account_id_2, weizen_id)], 'expired': False})
+
+    assert mock_store.get_current_user_buns('order_test_1') == {'Weizen': 1, 'Roggen': 0, 'Roeggelchen': 0}
+    # 2 'Weizen' buns are added as spares
+    assert mock_store.get_current_bun_order() == {'Weizen': 4, 'Roggen': 0, 'Roeggelchen': 0}
+    assert mock_store.get_current_mett_order() == 4 * 66.0
+
+
+def test_spares_with_roeggelchen(mock_store):
+    account_id = mock_store._account.insert_one({'name': 'order_test', 'balance': 0.0}).inserted_id
+    weizen_id = mock_store._buns.find_one({'bun_class': 'Weizen'})['_id']
+    mock_store._order.insert_one({'orders': [(account_id, weizen_id)], 'expired': False})
+
+    assert mock_store.get_current_bun_order() == {'Weizen': 3, 'Roggen': 0, 'Roeggelchen': 0}
+    mock_store.order_bun('order_test', 'Roeggelchen')
+    assert mock_store.get_current_bun_order() == {'Weizen': 2, 'Roggen': 0, 'Roeggelchen': 2}
+
+
+def test_order_history(mock_store):
+    account_id = mock_store._account.insert_one({'name': 'order_test', 'balance': 0.0}).inserted_id
+    weizen_id = mock_store._buns.find_one({'bun_class': 'Weizen'})['_id']
+    roggen_id = mock_store._buns.find_one({'bun_class': 'Roggen'})['_id']
+    mock_store._order.insert_one({'orders': [(account_id, weizen_id), (account_id, weizen_id), (account_id, roggen_id)], 'expired': True})
+    mock_store._order.insert_one({'orders': [(account_id, weizen_id), (account_id, roggen_id), (account_id, roggen_id)], 'expired': True})
+
+    assert mock_store.get_order_history('order_test') == ({'Weizen': 1.5, 'Roggen': 1.5, 'Roeggelchen': 0}, 3)
