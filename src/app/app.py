@@ -7,6 +7,7 @@ from flask import Flask
 from app.admin import AdminRoutes
 from app.orders import OrderRoutes
 from app.dashboard import DashboardRoutes
+from app.profile import ProfileRoutes
 from app.security.authentication import add_flask_security_to_app
 
 CONFIG = ConfigParser()
@@ -20,3 +21,4 @@ USER_DATABASE, USER_INTERFACE = add_flask_security_to_app(APP, CONFIG)
 OrderRoutes(APP, CONFIG)
 DashboardRoutes(APP, CONFIG)
 AdminRoutes(APP, CONFIG)
+ProfileRoutes(APP, CONFIG, USER_DATABASE, USER_INTERFACE)
