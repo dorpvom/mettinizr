@@ -3,7 +3,7 @@ mongomock
 coverage==4.0.3
 pytest<3.3.0
 pytest-cov<2.6.0
-python-coveralls
+coveralls[yaml]
 flask
 flask_security
 flask_sqlalchemy
