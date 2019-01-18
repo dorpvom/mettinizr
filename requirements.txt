@@ -1,6 +1,9 @@
 pymongo
 mongomock
-pytest
+coverage==4.0.3
+pytest<3.3.0
+pytest-cov<2.6.0
+python-coveralls
 flask
 flask_security
 flask_sqlalchemy
