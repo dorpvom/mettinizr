@@ -1,9 +1,12 @@
+[![Build Status](https://travis-ci.com/dorpvom/mettinizr.svg?branch=master)](https://travis-ci.com/dorpvom/mettinizr)
+
 Here be dragons
 
 ## Setup:
 Assuming you have python3 and pip3 installed.
 
 ```sh
+(sudo mkdir -p /data/mett && sudo chown -R $USER:$USER /data/mett)
 sudo apt-get install -f gcc libpython3-dev mongodb-server
 sudo -EH pip3 install -r requirements.txt
 ```

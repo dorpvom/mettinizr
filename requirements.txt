@@ -1,7 +1,6 @@
 pymongo
 mongomock
 pytest
-pytest-cov
 flask
 flask_security
 flask_sqlalchemy
