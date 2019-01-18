@@ -8,7 +8,7 @@ python:
 install:
   - pip install -r requirements.txt
 script:
-  - pytest --cov coveralls --cov-report term-missing
+  - pytest --cov 
 services:
   - mongodb
 after_success:
