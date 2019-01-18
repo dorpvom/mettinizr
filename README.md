@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/dorpvom/mettinizr.svg?branch=master)](https://travis-ci.com/dorpvom/mettinizr)
+
 Here be dragons
 
 ## Setup:
