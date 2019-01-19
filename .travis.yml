@@ -1,6 +1,9 @@
-dist:
-  - trusty
-  - xenial
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+    - os: linux
+      dist: xenial
 language: python
 before_install:
   - sudo apt-get update
