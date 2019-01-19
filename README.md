@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/dorpvom/mettinizr.svg?branch=master)](https://travis-ci.com/dorpvom/mettinizr)
+[![Coverage Status](https://coveralls.io/repos/github/dorpvom/mettinizr/badge.svg?branch=master)](https://coveralls.io/github/dorpvom/mettinizr?branch=master)
 
 Here be dragons
 
