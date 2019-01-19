@@ -8,6 +8,8 @@ python:
 install:
   - pip install -r requirements.txt
 script:
-  - pytest
+  - pytest --cov 
 services:
   - mongodb
+after_success:
+  - coveralls
