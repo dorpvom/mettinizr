@@ -1,10 +1,11 @@
 pymongo
 mongomock
-pytest
-pytest-cov
+coverage==4.0.3
+pytest<3.3.0
+pytest-cov<2.6.0
+coveralls[yaml]
 flask
 flask_security
 flask_sqlalchemy
 bcrypt
 uwsgi
-bson
