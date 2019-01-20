@@ -8,7 +8,7 @@ from flask_security import Security
 from flask_sqlalchemy import SQLAlchemy
 from passlib.context import CryptContext
 
-from app.app import APP, CONFIG
+from app.app_setup import AppSetup
 from app.security.authentication import create_user_interface
 from database.mett_store import MettStore
 
@@ -161,18 +161,15 @@ def prompt_for_actions(app, store, db, mett_store):
     print('\nQuitting ..')
 
 
-def start_user_management(app):
-    db = SQLAlchemy(app)
-    Security(app)
-    user_store = create_user_interface(db)
-    mett_store = MettStore(CONFIG)
+def start_user_management(app_setup):
+    mett_store = MettStore(app_setup.config)
 
-    db.create_all()
+    app_setup.user_database.create_all()
 
-    prompt_for_actions(app, user_store, db, mett_store)
+    prompt_for_actions(app_setup.app, app_setup.user_interface, app_setup.user_database, mett_store)
 
     return 0
 
 
 if __name__ == '__main__':
-    sys.exit(start_user_management(APP))
+    sys.exit(start_user_management(AppSetup()))
