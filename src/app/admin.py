@@ -3,15 +3,13 @@
 from flask import render_template, request
 
 from app.security.decorator import roles_accepted
-from database.mett_store import MettStore
 
 
 class AdminRoutes:
-    def __init__(self, app, config, api=None):
+    def __init__(self, app, config, mett_store):
         self._app = app
         self._config = config
-        self._api = api
-        self._mett_store = MettStore(config=self._config)
+        self._mett_store = mett_store
 
         self._app.add_url_rule('/admin', 'admin', self._show_admin_home, methods=['GET'])
 
