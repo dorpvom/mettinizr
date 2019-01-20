@@ -162,14 +162,11 @@ def prompt_for_actions(app, store, db, mett_store):
 
 
 def start_user_management(app_setup):
-    db = SQLAlchemy(app_setup.app)
-    Security(app_setup.app)
-    user_store = create_user_interface(db)
     mett_store = MettStore(app_setup.config)
 
-    db.create_all()
+    app_setup.user_database.create_all()
 
-    prompt_for_actions(app_setup.app, user_store, db, mett_store)
+    prompt_for_actions(app_setup.app, app_setup.user_interface, app_setup.user_database, mett_store)
 
     return 0
 
