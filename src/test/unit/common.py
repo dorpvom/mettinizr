@@ -10,6 +10,6 @@ def config_for_tests(tmpdir=None):
     config.set('Database', 'main_database', 'mett_test')
 
     if tmpdir:
-        config.set('Runtime', 'user_database', str(tmpdir.join('user.db')))
+        config.set('Runtime', 'user_database', 'sqlite:///{}'.format(tmpdir.join('user.db')))
 
     return config
