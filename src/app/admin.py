@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from flask import render_template, request
+from flask import render_template, request, flash
 
 from app.security.decorator import roles_accepted
-from database.mett_store import MettStore
 
 
 class AdminRoutes:
-    def __init__(self, app, config, api=None):
+    def __init__(self, app, config, mett_store):
         self._app = app
         self._config = config
-        self._api = api
-        self._mett_store = MettStore(config=self._config)
+        self._mett_store = mett_store
 
         self._app.add_url_rule('/admin', 'admin', self._show_admin_home, methods=['GET'])
 
@@ -74,7 +72,10 @@ class AdminRoutes:
     @roles_accepted('admin')
     def _change_mett_formula(self):
         if request.method == 'POST':
-            self._apply_change_to_formula(request)
+            try:
+                self._apply_change_to_formula(request)
+            except RuntimeError:
+                flash('Empty request. Please specify change of formula.', 'warning')
 
         return render_template('admin/formula.html', bun_classes=self._mett_store.list_bun_classes())
 
