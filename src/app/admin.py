@@ -4,6 +4,8 @@ from flask import render_template, request, flash
 
 from app.security.decorator import roles_accepted
 
+# pylint: disable=redefined-outer-name
+
 
 class AdminRoutes:
     def __init__(self, app, config, mett_store):

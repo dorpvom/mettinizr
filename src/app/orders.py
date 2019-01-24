@@ -5,6 +5,8 @@ from flask_security import current_user
 
 from app.security.decorator import roles_accepted
 
+# pylint: disable=redefined-outer-name
+
 
 class OrderRoutes:
     def __init__(self, app, config, mett_store):
