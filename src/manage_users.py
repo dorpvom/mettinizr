@@ -10,6 +10,10 @@ from app.app_setup import AppSetup
 from database.mett_store import MettStore
 
 
+class DatabaseError(Exception):
+    pass
+
+
 def setup_argparse():
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--version', action='version', version='mettinizr User Management (METTUM) 0.1')
@@ -50,7 +54,6 @@ class Actions:
             '\n\t[create_role]\t\tcreate new role'
             '\n\t[add_role_to_user]\tadd existing role to an existing user'
             '\n\t[remove_role_from_user]\tremove role from user'
-            '\n\t[get_apikey_for_user]\tretrieve apikey for existing user'
             '\n\t[help]\t\t\tshow this help'
             '\n\t[exit]\t\t\tclose application'
         )
@@ -68,10 +71,12 @@ class Actions:
     @staticmethod
     def create_user(app, interface, database, mett_store):
         user = get_input('username: ')
-        assert not Actions._user_exists(app, interface, user), 'user must not exist'
+        if Actions._user_exists(app, interface, user):
+            raise DatabaseError('user must not exist')
 
         password = getpass.getpass('password: ')
-        assert password_is_legal(password), 'password is illegal'
+        if not password_is_legal(password):
+            raise DatabaseError('password is illegal')
 
         if not mett_store.account_exists(user):
             mett_store.create_account(user)
@@ -96,10 +101,12 @@ class Actions:
     @staticmethod
     def add_role_to_user(app, interface, database, _):
         user = get_input('username: ')
-        assert Actions._user_exists(app, interface, user), 'user must exists before adding it to role'
+        if not Actions._user_exists(app, interface, user):
+            raise DatabaseError('user must exists before adding it to role')
 
         role = get_input('role name: ')
-        assert Actions._role_exists(app, interface, role), 'role must exists before user can be added'
+        if not Actions._role_exists(app, interface, role):
+            raise DatabaseError('role must exists before user can be added')
 
         with app.app_context():
             interface.add_role_to_user(user=interface.find_user(email=user), role=role)
@@ -108,10 +115,12 @@ class Actions:
     @staticmethod
     def remove_role_from_user(app, interface, database, _):
         user = get_input('username: ')
-        assert Actions._user_exists(app, interface, user), 'user must exists before adding it to role'
+        if not Actions._user_exists(app, interface, user):
+            DatabaseError('user must exists before adding it to role')
 
         role = get_input('role name: ')
-        assert Actions._role_exists(app, interface, role), 'role must exists before user can be added'
+        if not Actions._role_exists(app, interface, role):
+            raise DatabaseError('role must exists before user can be added')
 
         with app.app_context():
             interface.remove_role_from_user(user=interface.find_user(email=user), role=role)
@@ -120,7 +129,8 @@ class Actions:
     @staticmethod
     def delete_user(app, interface, database, _):
         user = get_input('username: ')
-        assert Actions._user_exists(app, interface, user), 'user must exists before adding it to role'
+        if not Actions._user_exists(app, interface, user):
+            raise DatabaseError('user must exists before adding it to role')
 
         with app.app_context():
             interface.delete_user(user=interface.find_user(email=user))
@@ -150,8 +160,8 @@ def prompt_for_actions(app, store, database, mett_store):
             try:
                 acting_function = getattr(Actions, action)
                 acting_function(app, store, database, mett_store)
-            except AssertionError as assertion_error:
-                print('error: {}'.format(assertion_error))
+            except DatabaseError as database_error:
+                print('error: {}'.format(database_error))
             except EOFError:
                 break
 
