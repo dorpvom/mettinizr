@@ -4,12 +4,12 @@ from flask_security import roles_accepted as original_decorator
 
 
 def roles_accepted(*roles):
-    def wrapper(fn):
-        @wraps(fn)
+    def wrapper(function):
+        @wraps(function)
         def decorated_view(*args, **kwargs):
             if not _auth_enabled(args):
-                return fn(*args, **kwargs)
-            return original_decorator(*roles)(fn)(*args, **kwargs)
+                return function(*args, **kwargs)
+            return original_decorator(*roles)(function)(*args, **kwargs)
         return decorated_view
     return wrapper
 
@@ -17,10 +17,9 @@ def roles_accepted(*roles):
 def _get_config_from_endpoint(endpoint_class):
     if getattr(endpoint_class, 'config', None):
         return endpoint_class.config
-    elif getattr(endpoint_class, '_config', None):
-        return endpoint_class._config
-    else:
-        raise AttributeError('There is no accessible config object')
+    if getattr(endpoint_class, '_config', None):
+        return endpoint_class._config  # pylint: disable=protected-access
+    raise AttributeError('There is no accessible config object')
 
 
 def _auth_enabled(args):

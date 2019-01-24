@@ -18,8 +18,8 @@ class UserRoleDatabase(SQLAlchemyUserDatastore):
 
     def user_exists(self, user_name):
         user = self.find_user(email=user_name)
-        return True if user else False
+        return bool(user)
 
     def role_exists(self, role):
         role = self.find_role(role)
-        return True if role else False
+        return bool(role)

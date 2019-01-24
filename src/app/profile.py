@@ -7,6 +7,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.security.decorator import roles_accepted
 
+# pylint: disable=redefined-outer-name
+
 
 class ProfileRoutes:
     def __init__(self, app, config, user_database, database_interface):
@@ -50,9 +52,9 @@ class ProfileRoutes:
                 flash('password change successful', 'success')
 
     @staticmethod
-    def _password_is_legal(pw):
-        if not pw:
+    def _password_is_legal(password):
+        if not password:
             return False
         schemes = ['bcrypt', 'des_crypt', 'pbkdf2_sha256', 'pbkdf2_sha512', 'sha256_crypt', 'sha512_crypt', 'plaintext']
         ctx = CryptContext(schemes=schemes)
-        return ctx.identify(pw) == 'plaintext'
+        return ctx.identify(password) == 'plaintext'
