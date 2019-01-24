@@ -4,12 +4,9 @@ import argparse
 import getpass
 import sys
 
-from flask_security import Security
-from flask_sqlalchemy import SQLAlchemy
 from passlib.context import CryptContext
 
 from app.app_setup import AppSetup
-from app.security.authentication import create_user_interface
 from database.mett_store import MettStore
 
 
@@ -35,12 +32,12 @@ def choose_action():
     return chosen_action
 
 
-def password_is_legal(pw: str) -> bool:
-    if not pw:
+def password_is_legal(password: str) -> bool:
+    if not password:
         return False
     schemes = ['bcrypt', 'des_crypt', 'pbkdf2_sha256', 'pbkdf2_sha512', 'sha256_crypt', 'sha512_crypt', 'plaintext']
     ctx = CryptContext(schemes=schemes)
-    return ctx.identify(pw) == 'plaintext'
+    return ctx.identify(password) == 'plaintext'
 
 
 class Actions:
@@ -62,14 +59,14 @@ class Actions:
     def _user_exists(app, interface, name):
         with app.app_context():
             user = interface.find_user(email=name)
-        return True if user else False
+        return bool(user)
 
     @staticmethod
     def exit(*_):
         raise EOFError('Quitting ..')
 
     @staticmethod
-    def create_user(app, interface, db, mett_store):
+    def create_user(app, interface, database, mett_store):
         user = get_input('username: ')
         assert not Actions._user_exists(app, interface, user), 'user must not exist'
 
@@ -81,23 +78,23 @@ class Actions:
 
         with app.app_context():
             interface.create_user(email=user, password=password)
-            db.session.commit()
+            database.session.commit()
 
     @staticmethod
     def _role_exists(app, interface, role):
         with app.app_context():
             exists = interface.find_role(role)
-        return True if exists else False
+        return bool(exists)
 
     @staticmethod
-    def create_role(app, interface, db, _):
+    def create_role(app, interface, database, _):
         role = get_input('role name: ')
         with app.app_context():
             interface.create_role(name=role)
-            db.session.commit()
+            database.session.commit()
 
     @staticmethod
-    def add_role_to_user(app, interface, db, _):
+    def add_role_to_user(app, interface, database, _):
         user = get_input('username: ')
         assert Actions._user_exists(app, interface, user), 'user must exists before adding it to role'
 
@@ -106,10 +103,10 @@ class Actions:
 
         with app.app_context():
             interface.add_role_to_user(user=interface.find_user(email=user), role=role)
-            db.session.commit()
+            database.session.commit()
 
     @staticmethod
-    def remove_role_from_user(app, interface, db, _):
+    def remove_role_from_user(app, interface, database, _):
         user = get_input('username: ')
         assert Actions._user_exists(app, interface, user), 'user must exists before adding it to role'
 
@@ -118,22 +115,23 @@ class Actions:
 
         with app.app_context():
             interface.remove_role_from_user(user=interface.find_user(email=user), role=role)
-            db.session.commit()
+            database.session.commit()
 
     @staticmethod
-    def delete_user(app, interface, db, _):
+    def delete_user(app, interface, database, _):
         user = get_input('username: ')
         assert Actions._user_exists(app, interface, user), 'user must exists before adding it to role'
 
         with app.app_context():
             interface.delete_user(user=interface.find_user(email=user))
-            db.session.commit()
+            database.session.commit()
 
 
 LEGAL_ACTIONS = [action for action in dir(Actions) if not action.startswith('_')]
 
 
-def prompt_for_actions(app, store, db, mett_store):
+def prompt_for_actions(app, store, database, mett_store):
+    # pylint: disable=anomalous-backslash-in-string
     print('''                             _   _   _       _
               _ __ ___   ___| |_| |_(_)_ __ (_)_____ __
              | '_ ` _ \ / _ \ __| __| | '_ \| |_  / '__|
@@ -152,7 +150,7 @@ def prompt_for_actions(app, store, db, mett_store):
         else:
             try:
                 acting_function = getattr(Actions, action)
-                acting_function(app, store, db, mett_store)
+                acting_function(app, store, database, mett_store)
             except AssertionError as assertion_error:
                 print('error: {}'.format(assertion_error))
             except EOFError:
