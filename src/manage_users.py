@@ -131,8 +131,7 @@ LEGAL_ACTIONS = [action for action in dir(Actions) if not action.startswith('_')
 
 
 def prompt_for_actions(app, store, database, mett_store):
-    # pylint: disable=anomalous-backslash-in-string
-    print('''                             _   _   _       _
+    print(r'''                             _   _   _       _
               _ __ ___   ___| |_| |_(_)_ __ (_)_____ __
              | '_ ` _ \ / _ \ __| __| | '_ \| |_  / '__|
              | | | | | |  __/ |_| |_| | | | | |/ /| |

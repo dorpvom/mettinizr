@@ -21,7 +21,7 @@ def test_dashboard_order_exists(mock_app, app_fixture):
 
     response = mock_app.get('/')
     assert 'Welcome {}!'.format(MockUser.email).encode() in response.data
-    assert not b'There is no current order!' in response.data
+    assert b'There is no current order!' not in response.data
 
 
 def test_dashboard_order_history(mock_app, app_fixture):
