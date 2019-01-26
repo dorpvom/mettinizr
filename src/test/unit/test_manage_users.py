@@ -16,7 +16,7 @@ def mock_config(tmpdir):
 @pytest.fixture(scope='function')
 def app_fixture(mock_config, monkeypatch):
     monkeypatch.setattr('database.mett_store.MongoClient', MongoClient)
-        setup = AppSetup(mock_config)
+    setup = AppSetup(mock_config)
     setup.user_database.create_all()
     return setup
 
