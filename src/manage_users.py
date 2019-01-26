@@ -109,11 +109,11 @@ class Actions:
     def remove_role_from_user(app, interface, database, _):
         user = get_input('username: ')
         if not Actions._user_exists(app, interface, user):
-            DatabaseError('user must exists before adding it to role')
+            raise DatabaseError('user must exists before removing role from it')
 
         role = get_input('role name: ')
         if not Actions._role_exists(app, interface, role):
-            raise DatabaseError('role must exists before user can be added')
+            raise DatabaseError('role must exists before removing it from user')
 
         with app.app_context():
             interface.remove_role_from_user(user=interface.find_user(email=user), role=role)
@@ -123,7 +123,7 @@ class Actions:
     def delete_user(app, interface, database, _):
         user = get_input('username: ')
         if not Actions._user_exists(app, interface, user):
-            raise DatabaseError('user must exists before adding it to role')
+            raise DatabaseError('user must exists before deleting it')
 
         with app.app_context():
             interface.delete_user(user=interface.find_user(email=user))

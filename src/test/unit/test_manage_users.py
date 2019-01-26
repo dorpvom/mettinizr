@@ -118,6 +118,41 @@ def test_remove_role_from_user(app_fixture, monkeypatch):
     assert len(user.roles) == 0
 
 
+def test_remove_role_no_user(app_fixture, monkeypatch, capsys):
+    monkeypatch.setattr('sys.stdin', io.StringIO('remove_role_from_user\ntest\ntest\n\0'))
+
+    prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
+    out, _ = capsys.readouterr()
+    assert 'user must exists before removing role from it' in out
+
+
+def test_remove_role_no_role(app_fixture, monkeypatch, capsys):
+    monkeypatch.setattr('sys.stdin', io.StringIO('remove_role_from_user\ntest\ntest\n\0'))
+    app_fixture.user_interface.create_user(email='test', password='test')
+    app_fixture.user_database.session.commit()
+
+    prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
+    out, _ = capsys.readouterr()
+    assert 'role must exists before removing it from user' in out
+
+
+def test_delete_user(app_fixture, monkeypatch):
+    monkeypatch.setattr('sys.stdin', io.StringIO('delete_user\ntest\n\0'))
+    app_fixture.user_interface.create_user(email='test', password='test')
+    app_fixture.user_database.session.commit()
+
+    prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
+    assert not app_fixture.user_interface.find_user(email='test')
+
+
+def test_delete_user_no_user(app_fixture, monkeypatch, capsys):
+    monkeypatch.setattr('sys.stdin', io.StringIO('delete_user\ntest\n\0'))
+
+    prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
+    out, _ = capsys.readouterr()
+    assert 'user must exists before deleting it' in out
+
+
 def test_show_help_and_exit(app_fixture, monkeypatch, capsys):
     monkeypatch.setattr('sys.stdin', io.StringIO('help\nexit\n'))
 
