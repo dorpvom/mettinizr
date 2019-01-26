@@ -33,3 +33,10 @@ def test_create_role(app_fixture, monkeypatch):
     assert not app_fixture.user_interface.role_exists('test')
     prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
     assert app_fixture.user_interface.role_exists('test')
+
+
+def test_show_help(app_fixture, monkeypatch):
+    monkeypatch.setattr('sys.stdin', io.StringIO('help\n\0'))
+
+    prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
+    assert True

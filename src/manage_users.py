@@ -14,13 +14,6 @@ class DatabaseError(Exception):
     pass
 
 
-def setup_argparse():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--version', action='version', version='mettinizr User Management (METTUM) 0.1')
-    parser.add_argument('-C', '--config_file', help='set path to config File', default='config/app.config')
-    return parser.parse_args()
-
-
 def get_input(message, max_len=25):
     while True:
         user_input = input(message)
