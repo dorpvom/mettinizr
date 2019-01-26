@@ -87,6 +87,24 @@ def test_add_role_to_user(app_fixture, monkeypatch):
     assert user.roles[0].name == 'test'
 
 
+def test_add_role_no_user(app_fixture, monkeypatch, capsys):
+    monkeypatch.setattr('sys.stdin', io.StringIO('add_role_to_user\ntest\ntest\n\0'))
+
+    prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
+    out, _ = capsys.readouterr()
+    assert 'user must exists before adding it to role' in out
+
+
+def test_add_role_no_role(app_fixture, monkeypatch, capsys):
+    monkeypatch.setattr('sys.stdin', io.StringIO('add_role_to_user\ntest\ntest\n\0'))
+    app_fixture.user_interface.create_user(email='test', password='test')
+    app_fixture.user_database.session.commit()
+
+    prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
+    out, _ = capsys.readouterr()
+    assert 'role must exists before user can be added' in out
+
+
 def test_remove_role_from_user(app_fixture, monkeypatch):
     monkeypatch.setattr('sys.stdin', io.StringIO('remove_role_from_user\ntest\ntest\n\0'))
     app_fixture.user_interface.create_user(email='test', password='test')
