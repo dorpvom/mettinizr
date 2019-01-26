@@ -22,7 +22,8 @@ def app_fixture(mock_config, monkeypatch):
 
 
 def test_create_user(app_fixture, monkeypatch):
-    monkeypatch.setattr('sys.stdin', io.StringIO('create_user\ntest\ntest\n\0'))
+    monkeypatch.setattr('sys.stdin', io.StringIO('create_user\ntest\n\0'))
+    monkeypatch.setattr('manage_users.getpass._raw_input', lambda *_, input: 'test')  # stdin mocking does not seem to work here ..
 
     assert not app_fixture.user_interface.user_exists('test')
     prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
