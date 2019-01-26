@@ -6,7 +6,6 @@ import sys
 from passlib.context import CryptContext
 
 from app.app_setup import AppSetup
-from database.mett_store import MettStore
 
 
 class DatabaseError(Exception):
@@ -86,6 +85,8 @@ class Actions:
     @staticmethod
     def create_role(app, interface, database, _):
         role = get_input('role name: ')
+        if Actions._role_exists(app, interface, role):
+            raise DatabaseError('role must not exist')
         with app.app_context():
             interface.create_role(name=role)
             database.session.commit()
@@ -152,8 +153,8 @@ def prompt_for_actions(app, store, database, mett_store):
             try:
                 acting_function = getattr(Actions, action)
                 acting_function(app, store, database, mett_store)
-            except DatabaseError as database_error:
-                print('error: {}'.format(database_error))
+            except (DatabaseError, ValueError) as error:
+                print('error: {}'.format(error))
             except EOFError:
                 break
 
@@ -161,11 +162,9 @@ def prompt_for_actions(app, store, database, mett_store):
 
 
 def start_user_management(app_setup):
-    mett_store = MettStore(app_setup.config)
-
     app_setup.user_database.create_all()
 
-    prompt_for_actions(app_setup.app, app_setup.user_interface, app_setup.user_database, mett_store)
+    prompt_for_actions(app_setup.app, app_setup.user_interface, app_setup.user_database, app_setup.mett_store)
 
     return 0
 
