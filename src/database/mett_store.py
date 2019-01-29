@@ -4,8 +4,10 @@ order: id, expired, orders (orders list of (account, bun), with account foreign_
 buns: id, bun_class, price, mett
 purchase: id, account, price, purpose, processed (account foreign_key on accound.name)
 '''
-from pymongo import MongoClient
+import datetime
+
 from bson.objectid import ObjectId
+from pymongo import MongoClient
 
 
 class StorageException(Exception):
@@ -22,6 +24,7 @@ class MettStore:
 
         self._account = self._mett_base.account
         self._order = self._mett_base.order
+        self._alt_order = self._mett_base.alt_order
         self._buns = self._mett_base.price
         self._purchase = self._mett_base.purchase
 
@@ -219,3 +222,21 @@ class MettStore:
     def _charge_bun(self, account, bun):  # TODO change to use of names not id
         bun_price = self._buns.find_one({'_id': bun})
         self._account.update_one({'_id': account}, {'$inc': {'balance': 0 - float(bun_price['price'])}})
+
+    # -------------- internal functions --------------
+
+    def create_order_alt(self, expiry_date):
+        if self._is_expired(expiry_date):
+            raise StorageException('Please enter date that hasn\'t expired yet')
+        if self.active_order_exists():
+            raise StorageException('No new order can be initialized while another one is active')
+        return self._alt_order.insert_one({'expiry_date': expiry_date, 'processed': False, 'orders': []}).inserted_id
+
+    def current_order_is_expired(self):
+        if not self.active_order_exists():
+            raise StorageException('There is no active order')
+        return self._is_expired(self._get_current_order()['expiry_date'])
+
+    def _is_expired(self, expiry_date):
+        expiry_time = self._config.get('DEFAULT', 'expiry_time').strip()
+        return datetime.datetime.strptime('{} {}'.format(expiry_date, expiry_time), '%Y-%m-%d %H:%M:%S') > datetime.datetime.now()
