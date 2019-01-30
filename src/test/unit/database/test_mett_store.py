@@ -99,7 +99,7 @@ def test_expire_order(mock_store):
     mock_store._account.insert_one({'name': 'test', 'balance': 5.0})
     mock_store.create_order()
     mock_store.order_bun('test', 'Weizen')
-    mock_store.expire_order()
+    mock_store.process_order()
     assert mock_store._account.find_one({'name': 'test'})['balance'] == 4.0
 
 

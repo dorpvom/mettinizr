@@ -21,10 +21,15 @@
                             </button>
                         </form>
                     {% else %}
-                        <form action="/admin/create_order" style="display:inline">
-                            <button class="btn btn-outline-secondary" type="submit">
-                                <i class="fas fa-plus"></i> Create order
-                            </button>
+                        <form method=post enctype=multipart/form-data action="">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="expiry" name="expiry">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="submit" value=submit>
+                                        <i class="fas fa-plus"></i> Create order
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     {% endif %}
                     <br /><br />

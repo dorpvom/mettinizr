@@ -5,7 +5,7 @@
 {% block body %}
 
     <div class="container">
-        {% if order_exists %}
+        {% if allowed_to_order %}
             <form method=post enctype=multipart/form-data action="">
                 <div class="row border rounded">
                     <div class="form-group col-md-2">
@@ -25,6 +25,8 @@
                     </div>
                 </div>
             </form>
+        {% endif %}
+        {% if order_exists %}
             <div class="row">
                 <div class="col-md-4">
                     <p class="alert">Current total order</p>
