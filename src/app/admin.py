@@ -3,6 +3,7 @@
 from flask import render_template, request, flash
 
 from app.security.decorator import roles_accepted
+from database.mett_store import StorageException
 
 # pylint: disable=redefined-outer-name
 
@@ -13,7 +14,7 @@ class AdminRoutes:
         self._config = config
         self._mett_store = mett_store
 
-        self._app.add_url_rule('/admin', 'admin', self._show_admin_home, methods=['GET'])
+        self._app.add_url_rule('/admin', 'admin', self._show_admin_home, methods=['GET', 'POST'])
 
         self._app.add_url_rule('/admin/create_order', 'admin/create_order', self._create_order, methods=['GET'])
         self._app.add_url_rule('/admin/cancel_order', 'admin/cancel_order', self._cancel_order, methods=['GET'])
@@ -29,6 +30,13 @@ class AdminRoutes:
 
     @roles_accepted('admin')
     def _show_admin_home(self):
+        if request.method == 'POST':
+            expiry_date = request.form['expiry']
+            try:
+                self._mett_store.create_order_alt(expiry_date)
+            except (StorageException, ValueError) as error:
+                flash(str(error), 'warning')
+
         return render_template('admin.html', order_exists=self._mett_store.active_order_exists())
 
     @roles_accepted('admin')
@@ -43,7 +51,7 @@ class AdminRoutes:
 
     @roles_accepted('admin')
     def _close_order(self):
-        self._mett_store.expire_order()
+        self._mett_store.process_order()
         return self._show_admin_home()
 
     @roles_accepted('admin')
