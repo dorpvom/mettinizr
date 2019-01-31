@@ -5,7 +5,7 @@ def test_admin_home(mock_app, app_fixture):
     response = mock_app.get('/admin')
     assert b'Create order' in response.data
 
-    app_fixture.mett_store.create_order()
+    app_fixture.mett_store.create_order_alt('2099-01-01')
 
     response = mock_app.get('/admin')
     assert b'Close order' in response.data
@@ -23,15 +23,8 @@ def test_book_money(mock_app, app_fixture):
     assert app_fixture.mett_store.get_account_information(MockUser.email)['balance'] == 1.37
 
 
-def test_create_order(mock_app, app_fixture):
-    assert not app_fixture.mett_store.active_order_exists()
-    response = mock_app.get('/admin/create_order')
-    assert response.status_code == 200
-    assert app_fixture.mett_store.active_order_exists()
-
-
 def test_close_order(mock_app, app_fixture):
-    app_fixture.mett_store.create_order()
+    app_fixture.mett_store.create_order_alt('2099-01-01')
 
     assert app_fixture.mett_store.active_order_exists()
     response = mock_app.get('/admin/close_order')
@@ -40,7 +33,7 @@ def test_close_order(mock_app, app_fixture):
 
 
 def test_cancel_order(mock_app, app_fixture):
-    app_fixture.mett_store.create_order()
+    app_fixture.mett_store.create_order_alt('2099-01-01')
 
     assert app_fixture.mett_store.active_order_exists()
     response = mock_app.get('/admin/cancel_order')

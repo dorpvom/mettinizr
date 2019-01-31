@@ -23,7 +23,6 @@ class MettStore:
         self._mett_base = self._client[self._config.get('Database', 'main_database')]
 
         self._account = self._mett_base.account
-        self._order = self._mett_base.order
         self._alt_order = self._mett_base.alt_order
         self._buns = self._mett_base.price
         self._purchase = self._mett_base.purchase
@@ -58,13 +57,9 @@ class MettStore:
             self._charge_bun(account, bun)
         self._alt_order.update_one({'processed': False}, {'$set': {'processed': True}})
 
-    def drop_order(self, order=None):
-        # TODO split in two functions
-        # drop order by id or current order
-        if order:
-            self._order.delete_one({'_id': ObjectId(order)})
-        else:
-            self._order.delete_one({'processed': False})
+    def drop_current_order(self):
+        # drop current order
+        self._alt_order.delete_one({'processed': False})
 
     def list_purchases(self, processed=False):
         # list purchases, if processed is false only those that have not been authorized or declined
@@ -122,7 +117,7 @@ class MettStore:
             raise StorageException('Order has expired. You are not allowed to order anymore.')
         orders = current_order['orders']
         orders.append((self._get_account_id_from_name(account), self._resolve_bun(bun_class)))
-        self._order.update_one({'_id': current_order['_id']}, {'$set': {'orders': orders}})
+        self._alt_order.update_one({'_id': current_order['_id']}, {'$set': {'orders': orders}})
 
     def state_purchase(self, account, amount, purpose):
         # add account, amount, purpose as non processed purchase
@@ -132,7 +127,7 @@ class MettStore:
     def get_order_history(self, user):
         # TODO Please refactor
         # get list of (order_id, orders) where orders is slice of orders ordered by account
-        orders = list(self._order.find({'processed': True}))
+        orders = list(self._alt_order.find({'processed': True}))
         user_has_ordered, flag = 0, False
         order = {bun_class: 0 for bun_class in self.list_bun_classes()}
         for former_order in orders:
@@ -235,4 +230,4 @@ class MettStore:
 
     def _is_expired(self, expiry_date):
         expiry_time = self._config.get('DEFAULT', 'expiry_time').strip()
-        return datetime.datetime.strptime('{} {}'.format(expiry_date, expiry_time), '%Y-%m-%d %H:%M:%S') > datetime.datetime.now()
+        return datetime.datetime.strptime('{} {}'.format(expiry_date, expiry_time), '%Y-%m-%d %H:%M:%S') < datetime.datetime.now()

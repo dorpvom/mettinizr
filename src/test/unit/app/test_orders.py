@@ -18,7 +18,7 @@ def test_order_home_active(mock_app, app_fixture):
     response = mock_app.get('/order')
     assert b'There is no current order!' in response.data
 
-    app_fixture.mett_store.create_order()
+    app_fixture.mett_store.create_order_alt('2099-01-01')
     response = mock_app.get('/order')
     assert b'There is no current order!' not in response.data
     assert b'132.0 g of mett' in response.data
@@ -26,7 +26,7 @@ def test_order_home_active(mock_app, app_fixture):
 
 def test_order_bun(mock_app, app_fixture):
     app_fixture.mett_store.create_account(MockUser.email)
-    app_fixture.mett_store.create_order()
+    app_fixture.mett_store.create_order_alt('2099-01-01')
     response = mock_app.get('/order')
     assert b'132.0 g of mett' in response.data
 

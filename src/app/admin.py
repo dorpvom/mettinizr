@@ -16,7 +16,6 @@ class AdminRoutes:
 
         self._app.add_url_rule('/admin', 'admin', self._show_admin_home, methods=['GET', 'POST'])
 
-        self._app.add_url_rule('/admin/create_order', 'admin/create_order', self._create_order, methods=['GET'])
         self._app.add_url_rule('/admin/cancel_order', 'admin/cancel_order', self._cancel_order, methods=['GET'])
         self._app.add_url_rule('/admin/close_order', 'admin/close_order', self._close_order, methods=['GET'])
 
@@ -40,13 +39,8 @@ class AdminRoutes:
         return render_template('admin.html', order_exists=self._mett_store.active_order_exists())
 
     @roles_accepted('admin')
-    def _create_order(self):
-        self._mett_store.create_order()
-        return self._show_admin_home()
-
-    @roles_accepted('admin')
     def _cancel_order(self):
-        self._mett_store.drop_order()
+        self._mett_store.drop_current_order()
         return self._show_admin_home()
 
     @roles_accepted('admin')
@@ -59,7 +53,7 @@ class AdminRoutes:
         if request.method == 'POST':
             transaction = _get_change_of_balance(request)
             self._mett_store.book_money(transaction['user'], float(transaction['amount']))
-            return self._show_admin_home()
+            return render_template('admin.html', order_exists=self._mett_store.active_order_exists())
 
         user_names = [name for _id, name in self._mett_store.list_accounts()]
         return render_template('admin/balance.html', users=user_names)
