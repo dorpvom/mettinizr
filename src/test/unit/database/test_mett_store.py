@@ -10,6 +10,8 @@ from test.unit.common import config_for_tests
 from database.mett_store import MettStore, StorageException
 from mongomock import MongoClient
 
+HAS_EXPIRED, HAS_NOT_EXPIRED = '2000-01-01', '2099-01-01'
+
 
 @pytest.fixture(scope='function')
 def mock_store(monkeypatch):
@@ -79,32 +81,37 @@ def test_resolve_bun(mock_store):
 
 
 def test_create_order(mock_store):
-    order_id = mock_store.create_order_alt('2099-01-01')
+    order_id = mock_store.create_order_alt(HAS_NOT_EXPIRED)
     assert order_id
 
     with pytest.raises(StorageException):
-        mock_store.create_order_alt('2099-01-01')
+        mock_store.create_order_alt(HAS_NOT_EXPIRED)
 
     mock_store._alt_order.delete_one({'_id': order_id})
-    assert mock_store.create_order_alt('2099-01-01')
+    assert mock_store.create_order_alt(HAS_NOT_EXPIRED)
+
+
+def test_create_order_expired_fails(mock_store):
+    with pytest.raises(StorageException):
+        mock_store.create_order_alt(HAS_EXPIRED)
 
 
 def test_active_order_exists(mock_store):
     assert not mock_store.active_order_exists()
-    mock_store._alt_order.insert_one({'orders': [], 'processed': False, 'expiry_date': '2099-01-01'})
+    mock_store._alt_order.insert_one({'orders': [], 'processed': False, 'expiry_date': HAS_NOT_EXPIRED})
     assert mock_store.active_order_exists()
 
 
 def test_expire_order(mock_store):
     mock_store._account.insert_one({'name': 'test', 'balance': 5.0})
-    mock_store.create_order_alt('2099-01-01')
+    mock_store.create_order_alt(HAS_NOT_EXPIRED)
     mock_store.order_bun('test', 'Weizen')
     mock_store.process_order()
     assert mock_store._account.find_one({'name': 'test'})['balance'] == 4.0
 
 
 def test_drop_order_current(mock_store):
-    order_id = mock_store._alt_order.insert_one({'orders': [], 'processed': False, 'expiry_date': '2099-01-01'}).inserted_id
+    order_id = mock_store._alt_order.insert_one({'orders': [], 'processed': False, 'expiry_date': HAS_NOT_EXPIRED}).inserted_id
 
     assert mock_store._alt_order.find_one({'_id': order_id})
     mock_store.drop_current_order()
@@ -174,7 +181,7 @@ def test_get_order(mock_store):
     account_id_1 = mock_store._account.insert_one({'name': 'order_test_1', 'balance': 0.0}).inserted_id
     account_id_2 = mock_store._account.insert_one({'name': 'order_test_2', 'balance': 0.0}).inserted_id
     weizen_id = mock_store._buns.find_one({'bun_class': 'Weizen'})['_id']
-    mock_store._alt_order.insert_one({'orders': [(account_id_1, weizen_id), (account_id_2, weizen_id)], 'processed': False, 'expiry_date': '2099-01-01'})
+    mock_store._alt_order.insert_one({'orders': [(account_id_1, weizen_id), (account_id_2, weizen_id)], 'processed': False, 'expiry_date': HAS_NOT_EXPIRED})
 
     assert mock_store.get_current_user_buns('order_test_1') == {'Weizen': 1, 'Roggen': 0, 'Roeggelchen': 0}
     # 2 'Weizen' buns are added as spares
@@ -185,7 +192,7 @@ def test_get_order(mock_store):
 def test_spares_with_roeggelchen(mock_store):
     account_id = mock_store._account.insert_one({'name': 'order_test', 'balance': 0.0}).inserted_id
     weizen_id = mock_store._buns.find_one({'bun_class': 'Weizen'})['_id']
-    mock_store._alt_order.insert_one({'orders': [(account_id, weizen_id)], 'processed': False, 'expiry_date': '2099-01-01'})
+    mock_store._alt_order.insert_one({'orders': [(account_id, weizen_id)], 'processed': False, 'expiry_date': HAS_NOT_EXPIRED})
 
     assert mock_store.get_current_bun_order() == {'Weizen': 3, 'Roggen': 0, 'Roeggelchen': 0}
     mock_store.order_bun('order_test', 'Roeggelchen')
@@ -200,3 +207,27 @@ def test_order_history(mock_store):
     mock_store._alt_order.insert_one({'orders': [(account_id, weizen_id), (account_id, roggen_id), (account_id, roggen_id)], 'processed': True, 'expiry_date': '2000-01-01'})
 
     assert mock_store.get_order_history('order_test') == ({'Weizen': 1.5, 'Roggen': 1.5, 'Roeggelchen': 0}, 3)
+
+
+def test_is_expired(mock_store):
+    assert not mock_store._is_expired(HAS_NOT_EXPIRED)
+    assert mock_store._is_expired(HAS_EXPIRED)
+
+
+def test_current_order_is_expired(mock_store):
+    mock_store._alt_order.insert_one({'orders': [], 'processed': False, 'expiry_date': HAS_EXPIRED})
+    assert mock_store.current_order_is_expired()
+    mock_store._alt_order.update_one({'expiry_date': HAS_EXPIRED}, {'$set': {'processed': True}})
+
+    with pytest.raises(StorageException):
+        mock_store.current_order_is_expired()
+
+    mock_store._alt_order.insert_one({'orders': [], 'processed': False, 'expiry_date': HAS_NOT_EXPIRED})
+    assert not mock_store.current_order_is_expired()
+
+
+def test_order_bun_expired_fails(mock_store):
+    mock_store._account.insert_one({'name': 'order_test', 'balance': 0.0}).inserted_id
+    mock_store._alt_order.insert_one({'orders': [], 'processed': False, 'expiry_date': HAS_EXPIRED})
+    with pytest.raises(StorageException):
+        mock_store.order_bun('order_test', 'Weizen')
