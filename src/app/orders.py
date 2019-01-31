@@ -26,7 +26,7 @@ class OrderRoutes:
                 self._mett_store.order_bun(user, mett_order['bun_class'])
 
         order_exists = self._mett_store.active_order_exists()
-        allowed_to_order = self._mett_store.current_order_is_expired() if order_exists else False
+        allowed_to_order = not self._mett_store.current_order_is_expired() if order_exists else False
         if order_exists:
             buns = self._mett_store.get_current_bun_order()
             mett = self._mett_store.get_current_mett_order()

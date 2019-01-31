@@ -5,7 +5,7 @@
 {% block body %}
 
     <div class="container">
-        <p>Welcome {{ username }}! This is home.<br />Your current balance is {{ balance }}.</p>
+        <p>Welcome {{ username }}! This is home.<br />Your current balance is {{ balance | round(2) }}.</p>
 
             <div class="row">
                 <div class="col col-md-3">
