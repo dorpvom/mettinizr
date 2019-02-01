@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% set active_page = "Dashboard" %}
+
+{% block body %}
+
+    <div class="container">
+        {% for name, is_active, roles in users %}
+            <p>{{ name }} is {% if not is_active %}not {% endif %} active and has roles: <pre>{{ roles }}</pre></p>
+        {% endfor %}
+    </div>
+
+{% endblock %}

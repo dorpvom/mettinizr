@@ -9,6 +9,7 @@ from app.orders import OrderRoutes
 from app.dashboard import DashboardRoutes
 from app.profile import ProfileRoutes
 from app.security.authentication import add_flask_security_to_app
+from app.user import UserRoutes
 from database.mett_store import MettStore
 
 
@@ -31,3 +32,4 @@ class AppSetup:
         DashboardRoutes(self.app, self.config, self.mett_store)
         AdminRoutes(self.app, self.config, self.mett_store)
         ProfileRoutes(self.app, self.config, self.user_database, self.user_interface)
+        UserRoutes(self.app, self.config, self.mett_store, self.user_interface)
