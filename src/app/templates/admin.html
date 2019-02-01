@@ -2,6 +2,13 @@
 
 {% set active_page = "Admin" %}
 
+{% block head %}
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker.standalone.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.js"></script>
+
+{% endblock %}
+
 {% block body %}
 
     <div class="container">
@@ -21,10 +28,26 @@
                             </button>
                         </form>
                     {% else %}
-                        <form action="/admin/create_order" style="display:inline">
-                            <button class="btn btn-outline-secondary" type="submit">
-                                <i class="fas fa-plus"></i> Create order
-                            </button>
+                        <form method=post enctype=multipart/form-data action="">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Expiry date</span>
+                                </div>
+                                <input type="text" class="form-control" value="2019-01-01" id="datepicker-div" name="expiry">
+                                <script type="text/javascript">
+                                    $(function () {
+                                        $('#datepicker-div').datepicker({
+                                            format: 'yyyy-mm-dd',
+                                            todayHighlight: true
+                                        });
+                                    });
+                                </script>
+                                <div class="input-group-append">
+                                    <button class="btn btn-secondary" type="submit" value=submit >
+                                        <i class="fas fa-plus"></i> Create order
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     {% endif %}
                     <br /><br />

@@ -15,8 +15,6 @@ def roles_accepted(*roles):
 
 
 def _get_config_from_endpoint(endpoint_class):
-    if getattr(endpoint_class, 'config', None):
-        return endpoint_class.config
     if getattr(endpoint_class, '_config', None):
         return endpoint_class._config  # pylint: disable=protected-access
     raise AttributeError('There is no accessible config object')

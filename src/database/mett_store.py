@@ -1,11 +1,13 @@
 '''
 account: id, name, balance (name private_key)
-order: id, expired, orders (orders list of (account, bun), with account foreign_key on account.id and bun foreign_key on price.id)
+order: id, processed, expiry_date, orders (orders list of (account, bun), with account foreign_key on account.id and bun foreign_key on price.id)
 buns: id, bun_class, price, mett
 purchase: id, account, price, purpose, processed (account foreign_key on accound.name)
 '''
-from pymongo import MongoClient
+import datetime
+
 from bson.objectid import ObjectId
+from pymongo import MongoClient
 
 
 class StorageException(Exception):
@@ -48,26 +50,16 @@ class MettStore:
         # return list of (accound.id, account.name) tuples
         return [(entry['_id'], entry['name']) for entry in self._account.find()]
 
-    def create_order(self):  # throws Excreption on existing non-expired order
-        # create new order
-        if self.active_order_exists():
-            raise StorageException('Only one current order allowed at all time')
-        return self._order.insert_one({'expired': False, 'orders': []}).inserted_id
-
-    def expire_order(self):
+    def process_order(self):
         # set expire of current order to true and decrease balances according to order
         current_order = self._get_current_order()
         for account, bun in current_order['orders']:
             self._charge_bun(account, bun)
-        self._order.update_one({'expired': False}, {'$set': {'expired': True}})
+        self._order.update_one({'processed': False}, {'$set': {'processed': True}})
 
-    def drop_order(self, order=None):
-        # TODO split in two functions
-        # drop order by id or current order
-        if order:
-            self._order.delete_one({'_id': ObjectId(order)})
-        else:
-            self._order.delete_one({'expired': False})
+    def drop_current_order(self):
+        # drop current order
+        self._order.delete_one({'processed': False})
 
     def list_purchases(self, processed=False):
         # list purchases, if processed is false only those that have not been authorized or declined
@@ -105,7 +97,7 @@ class MettStore:
     # -------------- user functions --------------
 
     def active_order_exists(self):
-        return self._order.count_documents({'expired': False}) > 0
+        return self._order.count_documents({'processed': False}) > 0
 
     def account_exists(self, name):
         return self._account.count_documents({'name': name}) > 0
@@ -121,6 +113,8 @@ class MettStore:
     def order_bun(self, account, bun_class):  # throws Exception if no current order
         # add (account, bun_class) to current order
         current_order = self._get_current_order()
+        if self.current_order_is_expired():
+            raise StorageException('Order has expired. You are not allowed to order anymore.')
         orders = current_order['orders']
         orders.append((self._get_account_id_from_name(account), self._resolve_bun(bun_class)))
         self._order.update_one({'_id': current_order['_id']}, {'$set': {'orders': orders}})
@@ -133,7 +127,7 @@ class MettStore:
     def get_order_history(self, user):
         # TODO Please refactor
         # get list of (order_id, orders) where orders is slice of orders ordered by account
-        orders = list(self._order.find({'expired': True}))
+        orders = list(self._order.find({'processed': True}))
         user_has_ordered, flag = 0, False
         order = {bun_class: 0 for bun_class in self.list_bun_classes()}
         for former_order in orders:
@@ -211,7 +205,7 @@ class MettStore:
         return bun_class['bun_class']
 
     def _get_current_order(self):
-        current_order = self._order.find_one({'expired': False})
+        current_order = self._order.find_one({'processed': False})
         if not current_order:
             raise StorageException('No current order')
         return current_order
@@ -219,3 +213,21 @@ class MettStore:
     def _charge_bun(self, account, bun):  # TODO change to use of names not id
         bun_price = self._buns.find_one({'_id': bun})
         self._account.update_one({'_id': account}, {'$inc': {'balance': 0 - float(bun_price['price'])}})
+
+    # -------------- internal functions --------------
+
+    def create_order(self, expiry_date):
+        if self._is_expired(expiry_date):
+            raise StorageException('Please enter date that hasn\'t expired yet')
+        if self.active_order_exists():
+            raise StorageException('No new order can be initialized while another one is active')
+        return self._order.insert_one({'expiry_date': expiry_date, 'processed': False, 'orders': []}).inserted_id
+
+    def current_order_is_expired(self):
+        if not self.active_order_exists():
+            raise StorageException('There is no active order')
+        return self._is_expired(self._get_current_order()['expiry_date'])
+
+    def _is_expired(self, expiry_date):
+        expiry_time = self._config.get('DEFAULT', 'expiry_time').strip()
+        return datetime.datetime.strptime('{} {}'.format(expiry_date, expiry_time), '%Y-%m-%d %H:%M:%S') < datetime.datetime.now()

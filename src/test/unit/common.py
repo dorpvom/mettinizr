@@ -1,6 +1,8 @@
 from configparser import ConfigParser
 from pathlib import Path
 
+HAS_EXPIRED, HAS_NOT_EXPIRED = '2000-01-01', '2099-01-01'
+
 
 class MockUser:
     email = 'mock_user_name'
