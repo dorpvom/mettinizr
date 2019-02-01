@@ -23,7 +23,7 @@ class MettStore:
         self._mett_base = self._client[self._config.get('Database', 'main_database')]
 
         self._account = self._mett_base.account
-        self._alt_order = self._mett_base.alt_order
+        self._order = self._mett_base.order
         self._buns = self._mett_base.price
         self._purchase = self._mett_base.purchase
 
@@ -55,11 +55,11 @@ class MettStore:
         current_order = self._get_current_order()
         for account, bun in current_order['orders']:
             self._charge_bun(account, bun)
-        self._alt_order.update_one({'processed': False}, {'$set': {'processed': True}})
+        self._order.update_one({'processed': False}, {'$set': {'processed': True}})
 
     def drop_current_order(self):
         # drop current order
-        self._alt_order.delete_one({'processed': False})
+        self._order.delete_one({'processed': False})
 
     def list_purchases(self, processed=False):
         # list purchases, if processed is false only those that have not been authorized or declined
@@ -97,7 +97,7 @@ class MettStore:
     # -------------- user functions --------------
 
     def active_order_exists(self):
-        return self._alt_order.count_documents({'processed': False}) > 0
+        return self._order.count_documents({'processed': False}) > 0
 
     def account_exists(self, name):
         return self._account.count_documents({'name': name}) > 0
@@ -117,7 +117,7 @@ class MettStore:
             raise StorageException('Order has expired. You are not allowed to order anymore.')
         orders = current_order['orders']
         orders.append((self._get_account_id_from_name(account), self._resolve_bun(bun_class)))
-        self._alt_order.update_one({'_id': current_order['_id']}, {'$set': {'orders': orders}})
+        self._order.update_one({'_id': current_order['_id']}, {'$set': {'orders': orders}})
 
     def state_purchase(self, account, amount, purpose):
         # add account, amount, purpose as non processed purchase
@@ -127,7 +127,7 @@ class MettStore:
     def get_order_history(self, user):
         # TODO Please refactor
         # get list of (order_id, orders) where orders is slice of orders ordered by account
-        orders = list(self._alt_order.find({'processed': True}))
+        orders = list(self._order.find({'processed': True}))
         user_has_ordered, flag = 0, False
         order = {bun_class: 0 for bun_class in self.list_bun_classes()}
         for former_order in orders:
@@ -205,7 +205,7 @@ class MettStore:
         return bun_class['bun_class']
 
     def _get_current_order(self):
-        current_order = self._alt_order.find_one({'processed': False})
+        current_order = self._order.find_one({'processed': False})
         if not current_order:
             raise StorageException('No current order')
         return current_order
@@ -216,12 +216,12 @@ class MettStore:
 
     # -------------- internal functions --------------
 
-    def create_order_alt(self, expiry_date):
+    def create_order(self, expiry_date):
         if self._is_expired(expiry_date):
             raise StorageException('Please enter date that hasn\'t expired yet')
         if self.active_order_exists():
             raise StorageException('No new order can be initialized while another one is active')
-        return self._alt_order.insert_one({'expiry_date': expiry_date, 'processed': False, 'orders': []}).inserted_id
+        return self._order.insert_one({'expiry_date': expiry_date, 'processed': False, 'orders': []}).inserted_id
 
     def current_order_is_expired(self):
         if not self.active_order_exists():

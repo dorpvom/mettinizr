@@ -5,7 +5,7 @@ def test_admin_home(mock_app, app_fixture):
     response = mock_app.get('/admin')
     assert b'Create order' in response.data
 
-    app_fixture.mett_store.create_order_alt(HAS_NOT_EXPIRED)
+    app_fixture.mett_store.create_order(HAS_NOT_EXPIRED)
 
     response = mock_app.get('/admin')
     assert b'Close order' in response.data
@@ -30,7 +30,7 @@ def test_create_order_expired(mock_app, app_fixture):
 
 
 def test_create_order_exists(mock_app, app_fixture):
-    app_fixture.mett_store.create_order_alt(HAS_NOT_EXPIRED)
+    app_fixture.mett_store.create_order(HAS_NOT_EXPIRED)
     response = mock_app.post('/admin', data={'expiry': HAS_NOT_EXPIRED})
     assert response.status_code == 200
     assert b'while another one is active' in response.data
@@ -44,7 +44,7 @@ def test_create_order_success(mock_app, app_fixture):
 
 
 def test_close_order(mock_app, app_fixture):
-    app_fixture.mett_store.create_order_alt(HAS_NOT_EXPIRED)
+    app_fixture.mett_store.create_order(HAS_NOT_EXPIRED)
 
     assert app_fixture.mett_store.active_order_exists()
     response = mock_app.get('/admin/close_order')
@@ -53,7 +53,7 @@ def test_close_order(mock_app, app_fixture):
 
 
 def test_cancel_order(mock_app, app_fixture):
-    app_fixture.mett_store.create_order_alt(HAS_NOT_EXPIRED)
+    app_fixture.mett_store.create_order(HAS_NOT_EXPIRED)
 
     assert app_fixture.mett_store.active_order_exists()
     response = mock_app.get('/admin/cancel_order')

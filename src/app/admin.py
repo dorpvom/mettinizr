@@ -32,7 +32,7 @@ class AdminRoutes:
         if request.method == 'POST':
             expiry_date = request.form['expiry']
             try:
-                self._mett_store.create_order_alt(expiry_date)
+                self._mett_store.create_order(expiry_date)
             except (StorageException, ValueError) as error:
                 flash(str(error), 'warning')
 
