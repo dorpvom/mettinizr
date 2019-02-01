@@ -6,11 +6,9 @@ purchase: id, account, price, purpose, processed (account foreign_key on accound
 '''
 import pytest
 
-from test.unit.common import config_for_tests
+from test.unit.common import config_for_tests, HAS_NOT_EXPIRED, HAS_EXPIRED
 from database.mett_store import MettStore, StorageException
 from mongomock import MongoClient
-
-HAS_EXPIRED, HAS_NOT_EXPIRED = '2000-01-01', '2099-01-01'
 
 
 @pytest.fixture(scope='function')
