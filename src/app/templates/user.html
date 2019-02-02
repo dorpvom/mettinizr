@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% set active_page = "Dashboard" %}
+{% set active_page = "User" %}
 
 {% block body %}
 
-    <div class="table-responsive">
+    <div class="table-responsive-md">
         <table class="table table-hover">
             <thead>
                 <tr>
                     <th scope="col">name</th>
-                    <th scope="col">roles</th>
                     <th scope="col">balance</th>
+                    <th scope="col">roles</th>
                     <th scope="col">delete</th>
                 </tr>
             </thead>
@@ -18,13 +18,32 @@
                 {% for user in users %}
                     <tr>
                         <td>{{ user['name'] }}</td>
-                        <td>{{ user['roles'] }}</td>
                         <td>{{ user['balance'] }}</td>
-                        <td> - </td>
+                        <td>
+                            <div class="btn-group" role="group" aria-label="role management">
+                                <button type="button" class="btn btn-outline-success"><i class="fas fa-plus"></i></button>
+                                <button type="button" class="btn btn-outline-danger"><i class="fas fa-minus"></i></button>
+                            </div>
+                            Has: {{ user['roles'] }}
+                        </td>
+                        <td><button type="button" class="btn btn-outline-danger"><i class="fas fa-user-slash"></i></button></td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
+
+    </div>
+
+    <br /><br />
+
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Create user</span>
+        </div>
+        <input type="text" class="form-control" aria-label="name">
+        <div class="input-group-append">
+            <button class="btn btn-outline-success" type="button" id="create-user-button"><i class="fas fa-plus"></i></button>
+        </div>
     </div>
 
 {% endblock %}

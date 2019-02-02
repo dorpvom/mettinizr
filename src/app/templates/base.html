@@ -34,9 +34,14 @@
                     <li class="nav-item">
                         <a class="nav-link {% if active_page == 'Order' %} active {% endif %}" href="/order">Order</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'Admin' %} active {% endif %}" href="/admin">Admin</a>
-                    </li>
+                    {% if current_user.has_role('admin') %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'Admin' %} active {% endif %}" href="/admin">Admin</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'User' %} active {% endif %}" href="/user">Users</a>
+                        </li>
+                    {% endif %}
                     {% if current_user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
