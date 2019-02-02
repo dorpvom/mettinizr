@@ -22,8 +22,68 @@
                         <td>{{ user['roles'] }}</td>
                         <td>
                             <div class="btn-group" role="group" aria-label="role management">
-                                <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#add_user_role"><i class="fas fa-plus"></i></button>
-                                <button type="button" class="btn btn-outline-danger"><i class="fas fa-minus"></i></button>
+                                <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#add_user_role_{{ user['name'] }}"><i class="fas fa-plus"></i></button>
+                                <div id="add_user_role_{{ user['name'] }}" class="modal fade" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Add role</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            </div>
+
+                                            <form method="post">
+                                                <div class="modal-body">
+                                                    <input type="text" class="form-control" id="add_role_username" name="add_role_username" value="{{ user['name'] }}" readonly>
+                                                    <br />
+                                                    <select class="form-control" id="added_role" name="added_role">
+                                                        {% for role in existing_roles %}
+                                                            <option>{{ role }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                            </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary" id="added_role_button" value="added_role_button">Add</button>
+                                                </div>
+                                            </form>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="remove_user_role_{{ user['name'] }}" class="modal fade" role="dialog">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Remove role</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            </div>
+
+                                            <form method="post">
+                                                <div class="modal-body">
+                                                    <input type="text" class="form-control" id="remove_role_username" name="remove_role_username" value="{{ user['name'] }}" readonly>
+                                                    <br />
+                                                    <select class="form-control" id="removed_role" name="removed_role">
+                                                        {% for role in existing_roles %}
+                                                            <option>{{ role }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary" id="removed_role_button" value="removed_role_button">Remove</button>
+                                                </div>
+                                            </form>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#remove_user_role_{{ user['name'] }}"><i class="fas fa-minus"></i></button>
+
                             </div>
                         </td>
                         <td><button type="button" class="btn btn-outline-danger"><i class="fas fa-user-slash"></i></button></td>
@@ -49,35 +109,5 @@
             </div>
         </div>
     </form>
-
-    <div id="add_user_role" class="modal fade" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-
-                <div class="modal-header">
-                    <h5 class="modal-title">Add role</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                </div>
-
-                <form method="post">
-                    <div class="modal-body">
-                        <input type="text" class="form-control" id="add_role_username" name="add_role_username" value="dorp" readonly>
-                        <br />
-                        <select class="form-control" id="added_role" name="added_role">
-                            {% for role in existing_roles %}
-                                <option>{{ role }}</option>
-                            {% endfor %}
-                        </select>
-                </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="added_role_button" value="added_role_button">Add</button>
-                    </div>
-                </form>
-
-            </div>
-        </div>
-    </div>
 
 {% endblock %}
