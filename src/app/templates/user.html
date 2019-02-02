@@ -4,10 +4,27 @@
 
 {% block body %}
 
-    <div class="container">
-        {% for name, is_active, roles in users %}
-            <p>{{ name }} is {% if not is_active %}not {% endif %} active and has roles: <pre>{{ roles }}</pre></p>
-        {% endfor %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">name</th>
+                    <th scope="col">roles</th>
+                    <th scope="col">balance</th>
+                    <th scope="col">delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user['name'] }}</td>
+                        <td>{{ user['roles'] }}</td>
+                        <td>{{ user['balance'] }}</td>
+                        <td> - </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
 {% endblock %}

@@ -20,5 +20,19 @@ class UserRoutes:
 
     @roles_accepted('admin')
     def _show_user_home(self):
-        users = [[user.email, user.is_active, user.roles] for user in self._user_store.list_users()]
+        users = list(self._generate_user_information())
         return render_template('user.html', users=users)
+
+    def _generate_user_information(self):
+        for user in self._user_store.list_users():
+            information = {
+                'name': user.email,
+                'active': user.is_active,
+                'roles': self._extract_roles(user.roles),
+                'balance': self._mett_store.get_account_information(user.email)['balance']
+            }
+            yield information
+
+    @staticmethod
+    def _extract_roles(roles):
+        return ', '.join((role.name for role in roles))
