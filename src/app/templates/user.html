@@ -35,15 +35,18 @@
     </div>
 
     <br /><br />
-
-    <div class="input-group">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Create user</span>
+    <form method=post enctype=multipart/form-data action="">
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Create user</span>
+            </div>
+            <input type="text" class="form-control" aria-label="name" name="new_user" placeholder="name">
+            <input type="password" class="form-control" aria-label="password" name="new_password" placeholder="password">
+            <div class="input-group-append">
+                <button class="btn btn-outline-success" type="submit" id="create-user-button" value=submit>
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
         </div>
-        <input type="text" class="form-control" aria-label="name">
-        <div class="input-group-append">
-            <button class="btn btn-outline-success" type="button" id="create-user-button"><i class="fas fa-plus"></i></button>
-        </div>
-    </div>
-
+    </form>
 {% endblock %}

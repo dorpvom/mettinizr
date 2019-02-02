@@ -1,5 +1,6 @@
 from flask_security import SQLAlchemyUserDatastore
 from flask_security.utils import verify_password, hash_password
+from passlib.context import CryptContext
 
 
 class UserRoleDatabase(SQLAlchemyUserDatastore):
@@ -23,3 +24,11 @@ class UserRoleDatabase(SQLAlchemyUserDatastore):
     def role_exists(self, role):
         role = self.find_role(role)
         return bool(role)
+
+
+def password_is_legal(password: str) -> bool:
+    if not password:
+        return False
+    schemes = ['bcrypt', 'des_crypt', 'pbkdf2_sha256', 'pbkdf2_sha512', 'sha256_crypt', 'sha512_crypt', 'plaintext']
+    ctx = CryptContext(schemes=schemes)
+    return ctx.identify(password) == 'plaintext'
