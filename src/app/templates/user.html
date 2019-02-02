@@ -10,7 +10,7 @@
                 <tr>
                     <th scope="col">name</th>
                     <th scope="col">balance</th>
-                    <th scope="col">roles</th>
+                    <th scope="col" colspan="2">roles</th>
                     <th scope="col">delete</th>
                 </tr>
             </thead>
@@ -19,12 +19,12 @@
                     <tr>
                         <td>{{ user['name'] }}</td>
                         <td>{{ user['balance'] }}</td>
+                        <td>{{ user['roles'] }}</td>
                         <td>
                             <div class="btn-group" role="group" aria-label="role management">
-                                <button type="button" class="btn btn-outline-success"><i class="fas fa-plus"></i></button>
+                                <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#add_user_role"><i class="fas fa-plus"></i></button>
                                 <button type="button" class="btn btn-outline-danger"><i class="fas fa-minus"></i></button>
                             </div>
-                            Has: {{ user['roles'] }}
                         </td>
                         <td><button type="button" class="btn btn-outline-danger"><i class="fas fa-user-slash"></i></button></td>
                     </tr>
@@ -49,4 +49,35 @@
             </div>
         </div>
     </form>
+
+    <div id="add_user_role" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Add role</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+
+                <form method="post">
+                    <div class="modal-body">
+                        <input type="text" class="form-control" id="add_role_username" name="add_role_username" value="dorp" readonly>
+                        <br />
+                        <select class="form-control" id="added_role" name="added_role">
+                            {% for role in existing_roles %}
+                                <option>{{ role }}</option>
+                            {% endfor %}
+                        </select>
+                </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="added_role_button" value="added_role_button">Add</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
