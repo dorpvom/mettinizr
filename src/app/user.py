@@ -43,7 +43,7 @@ class UserRoutes:
         except StorageException as error:
             flash(str(error), 'warning')
         except RuntimeError:
-            flash('Failed to delete user account')
+            flash('Failed to delete user account', 'warning')
         return self._show_user_home()
 
     def _generate_user_information(self):
