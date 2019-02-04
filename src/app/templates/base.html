@@ -34,9 +34,14 @@
                     <li class="nav-item">
                         <a class="nav-link {% if active_page == 'Order' %} active {% endif %}" href="/order">Order</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'Admin' %} active {% endif %}" href="/admin">Admin</a>
-                    </li>
+                    {% if current_user.has_role('admin') %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'Admin' %} active {% endif %}" href="/admin">Admin</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'User' %} active {% endif %}" href="/user">Users</a>
+                        </li>
+                    {% endif %}
                     {% if current_user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -60,25 +65,24 @@
             <!-- /.navbar-collapse -->
         </nav>
 
-        <!-- flash messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            <div class="row" style="padding: 0">
-                <div class="col-xs-12">
-                    {% for category, message in messages %}
-                        <div style="padding: 15px; margin-bottom: -15px">
-                            {% set flash_categories = ['danger', 'warning', 'info', 'success'] %}
-                            <div class="alert alert-{{ category if category in flash_categories else 'danger' }} alert-dismissible" role="alert">
+        <div class="container-fluid">
+
+            <!-- flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="row">
+                    <div class="col-sm">
+                        {% for category, message in messages %}
+                            <br />
+                            {% set flash_categories = ['danger', 'warning', 'primary', 'success'] %}
+                            <div class="alert alert-{{ category if category in flash_categories else 'primary' }} alert-dismissible" role="alert">
                                 {{ message }}
                             </div>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
-            {% endif %}
-        {% endwith %}
-
-        <div class="container-fluid">
+                {% endif %}
+            {% endwith %}
 
             <br /><br />
 

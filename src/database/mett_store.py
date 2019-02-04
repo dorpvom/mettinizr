@@ -39,8 +39,12 @@ class MettStore:
     def create_account(self, name):
         if self.account_exists(name):
             raise StorageException('Account {} exists'.format(name))
-        result = self._account.insert_one({'name': name, 'balance': 0.0})
-        return result.inserted_id
+        return self._account.insert_one({'name': name, 'balance': 0.0}).inserted_id
+
+    def delete_account(self, name):
+        if not self.account_exists(name):
+            raise StorageException('Account {} does not exist'.format(name))
+        return self._account.delete_one({'name': name}).deleted_count
 
     def book_money(self, account, amount):
         # Increase balance of account by amount

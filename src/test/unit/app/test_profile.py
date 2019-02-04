@@ -10,7 +10,7 @@ def patch_current_user(monkeypatch):
 
 def test_show_profile_page(mock_app):
     response = mock_app.get('/profile')
-    assert b'Change User Password' in response.data
+    assert b'Change password' in response.data
 
 
 def test_profile_new_password(mock_app):

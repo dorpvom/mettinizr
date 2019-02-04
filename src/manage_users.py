@@ -3,9 +3,8 @@
 import getpass
 import sys
 
-from passlib.context import CryptContext
-
 from app.app_setup import AppSetup
+from database.user_store import password_is_legal
 
 
 class DatabaseError(Exception):
@@ -25,14 +24,6 @@ def choose_action():
     print('\nPlease choose an action (use "help" for a list of available actions)')
     chosen_action = input('action: ')
     return chosen_action
-
-
-def password_is_legal(password: str) -> bool:
-    if not password:
-        return False
-    schemes = ['bcrypt', 'des_crypt', 'pbkdf2_sha256', 'pbkdf2_sha512', 'sha256_crypt', 'sha512_crypt', 'plaintext']
-    ctx = CryptContext(schemes=schemes)
-    return ctx.identify(password) == 'plaintext'
 
 
 class Actions:
