@@ -18,7 +18,7 @@
                 {% for user in users %}
                     <tr>
                         <td>{{ user['name'] }}</td>
-                        <td>{{ user['balance'] }}</td>
+                        <td>{{ user['balance'] | round(2) }}</td>
                         <td>{{ user['roles'] }}</td>
                         <td>
                             <div class="btn-group" role="group" aria-label="role management">
@@ -86,7 +86,13 @@
 
                             </div>
                         </td>
-                        <td><button type="button" class="btn btn-outline-danger"><i class="fas fa-user-slash"></i></button></td>
+                        <td>
+                            <form action="/user/delete/{{ user['name'] }}">
+                                <button class="btn btn-outline-danger" type="submit">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

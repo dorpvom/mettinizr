@@ -20,6 +20,7 @@ class UserRoutes:
         self._user_database = user_database
 
         self._app.add_url_rule('/user', 'user', self._show_user_home, methods=['GET', 'POST'])
+        self._app.add_url_rule('/user/delete/<name>', 'user/delete/<name>', self._delete_user, methods=['GET'])
 
     @roles_accepted('admin')
     def _show_user_home(self):
@@ -32,6 +33,18 @@ class UserRoutes:
                 self._handle_removed_role()
 
         return render_template('user.html', users=list(self._generate_user_information()), existing_roles=[role.name for role in self._user_interface.list_roles()])
+
+    @roles_accepted('admin')
+    def _delete_user(self, name):
+        try:
+            self._mett_store.delete_account(name)
+            with self.user_db_session():
+                self._user_interface.delete_user(user=self._user_interface.find_user(email=name))
+        except StorageException as error:
+            flash(str(error), 'warning')
+        except RuntimeError:
+            flash('Failed to delete user account')
+        return self._show_user_home()
 
     def _generate_user_information(self):
         for user in self._user_interface.list_users():
