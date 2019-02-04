@@ -56,3 +56,28 @@ def test_delete_user(mock_app, app_fixture):
     response = mock_app.get('/user/delete/{}'.format(MockUser.email))
     assert response.status_code == 200
     assert not app_fixture.mett_store.account_exists(MockUser.email)
+
+
+def test_delete_non_existing_user(mock_app, app_fixture):
+    response = mock_app.get('/user/delete/{}'.format('another'))
+    assert b'another does not exist' in response.data
+
+    app_fixture.mett_store.create_account('another')
+
+    response = mock_app.get('/user/delete/{}'.format('another'))
+    assert b'Failed to delete user' in response.data
+
+
+def test_create_bad_password(mock_app, app_fixture):
+    app_fixture.mett_store.create_account(MockUser.email)
+    response = mock_app.post('/user', data={'new_user': 'a_user', 'new_password': ''})
+    assert b'Please choose legal password' in response.data
+
+
+def test_create_exists_already(mock_app, app_fixture):
+    app_fixture.mett_store.create_account('a_user')
+    response = mock_app.post('/user', data={'new_user': 'a_user', 'new_password': 'a_password'})
+    assert b'a_user exists' in response.data
+
+    response = mock_app.post('/user', data={'new_user': 'a_user', 'new_password': 'a_password'})
+    assert b'user a_user. Might already exist' in response.data

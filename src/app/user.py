@@ -32,7 +32,13 @@ class UserRoutes:
             elif 'remove_role_username' in request.form:
                 self._handle_removed_role()
 
-        return render_template('user.html', users=list(self._generate_user_information()), existing_roles=[role.name for role in self._user_interface.list_roles()])
+        try:
+            users = list(self._generate_user_information())
+        except StorageException as error:
+            flash(str(error), 'danger')
+            users = list()
+
+        return render_template('user.html', users=users, existing_roles=[role.name for role in self._user_interface.list_roles()])
 
     @roles_accepted('admin')
     def _delete_user(self, name):
@@ -76,18 +82,12 @@ class UserRoutes:
             flash('Can\'t create user {}. Might already exist. Otherwise check for bad spelling.'.format(request.form['new_user']), 'warning')
 
     def _handle_added_role(self):
-        try:
-            with self.user_db_session():
-                self._user_interface.add_role_to_user(user=self._user_interface.find_user(email=request.form['add_role_username']), role=request.form['added_role'])
-        except RuntimeError:
-            flash('Can\'t add role. Check if user has role already.', 'warning')
+        with self.user_db_session():
+            self._user_interface.add_role_to_user(user=self._user_interface.find_user(email=request.form['add_role_username']), role=request.form['added_role'])
 
     def _handle_removed_role(self):
-        try:
-            with self.user_db_session():
-                self._user_interface.remove_role_from_user(user=self._user_interface.find_user(email=request.form['remove_role_username']), role=request.form['removed_role'])
-        except RuntimeError:
-            flash('Can\'t remove role. Check if user has role in the first place.', 'warning')
+        with self.user_db_session():
+            self._user_interface.remove_role_from_user(user=self._user_interface.find_user(email=request.form['remove_role_username']), role=request.form['removed_role'])
 
     @contextmanager
     def user_db_session(self):
