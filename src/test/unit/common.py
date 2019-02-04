@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from contextlib import contextmanager
 from pathlib import Path
 
 HAS_EXPIRED, HAS_NOT_EXPIRED = '2000-01-01', '2099-01-01'
@@ -21,3 +22,10 @@ def config_for_tests(tmpdir=None):
         config.set('Runtime', 'user_database', 'sqlite:///{}'.format(tmpdir.join('user.db')))
 
     return config
+
+
+@contextmanager
+def simple_session(database):
+    session = database.session
+    yield session
+    session.commit()

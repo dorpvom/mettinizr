@@ -42,6 +42,14 @@ def test_create_account(mock_store):
         mock_store.create_account('account_test')
 
 
+def test_delete_account(mock_store):
+    mock_store._account.insert_one({'name': 'test_account', 'balance': 0.0})
+    assert mock_store.delete_account('test_account') == 1
+
+    with pytest.raises(StorageException):
+        mock_store.delete_account('test_account')
+
+
 def test_account_exists(mock_store):
     assert not mock_store.account_exists('account_test')
     mock_store._account.insert_one({'name': 'account_test', 'balance': 5.0})
