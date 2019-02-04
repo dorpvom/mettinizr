@@ -14,10 +14,6 @@ RUN pip3 install -r requirements.txt
 
 RUN mkdir -p /data/mett && mkdir -p /data/db
 
-RUN mongod --fork --syslog && sleep 2
-
-RUN python3 src/create_initial_user.py
-
 WORKDIR /opt/app/src
 
-CMD ["uwsgi", "--ini", "config/uwsgi.config"]
+CMD ["./docker_entry.sh"]
