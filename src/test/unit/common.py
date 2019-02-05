@@ -16,6 +16,7 @@ def config_for_tests(tmpdir=None):
     config.read(str(Path(Path(__file__).parent.parent.parent, 'config', 'app.config')))
 
     config.set('Runtime', 'testing', 'true')
+    config.set('Runtime', 'behind_proxy', 'false')
     config.set('Database', 'main_database', 'mett_test')
 
     if tmpdir:
