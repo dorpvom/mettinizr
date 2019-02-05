@@ -10,6 +10,8 @@ RUN apt-get update && install_clean \
     python3-distutils gcc \
     libpython3-dev mongodb-server
 
+RUN pip3 install wheel
+
 RUN pip3 install -r requirements.txt
 
 RUN mkdir -p /data/mett && mkdir -p /data/db
