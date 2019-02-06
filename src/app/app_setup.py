@@ -13,8 +13,7 @@ from app.user import UserRoutes
 from database.mett_store import MettStore
 
 
-class ReverseProxied(object):
-
+class ReverseProxied:
     def __init__(self, app, script_name=None, scheme=None, server=None):
         self.app = app
         self.script_name = script_name

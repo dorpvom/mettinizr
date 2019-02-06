@@ -44,7 +44,7 @@ class UserRoutes:
     def _delete_user(self, name):
         try:
             self._mett_store.delete_account(name)
-            with self.user_db_session():
+            with user_db_session(self._user_database):
                 self._user_interface.delete_user(user=self._user_interface.find_user(email=name))
         except StorageException as error:
             flash(str(error), 'warning')
@@ -71,7 +71,7 @@ class UserRoutes:
             if not password_is_legal(request.form['new_password']):
                 raise ValueError('Please choose legal password')
 
-            with self.user_db_session():
+            with user_db_session(self._user_database):
                 self._user_interface.create_user(email=request.form['new_user'], password=request.form['new_password'])
 
             self._mett_store.create_account(request.form['new_user'])
@@ -82,19 +82,20 @@ class UserRoutes:
             flash('Can\'t create user {}. Might already exist. Otherwise check for bad spelling.'.format(request.form['new_user']), 'warning')
 
     def _handle_added_role(self):
-        with self.user_db_session():
+        with user_db_session(self._user_database):
             self._user_interface.add_role_to_user(user=self._user_interface.find_user(email=request.form['add_role_username']), role=request.form['added_role'])
 
     def _handle_removed_role(self):
-        with self.user_db_session():
+        with user_db_session(self._user_database):
             self._user_interface.remove_role_from_user(user=self._user_interface.find_user(email=request.form['remove_role_username']), role=request.form['removed_role'])
 
-    @contextmanager
-    def user_db_session(self):
-        session = self._user_database.session
-        try:
-            yield session
-            session.commit()
-        except (SQLAlchemyError, TypeError) as exception:
-            session.rollback()
-            raise RuntimeError('Error while accessing user database: {}'.format(exception))
+
+@contextmanager
+def user_db_session(database):
+    session = database.session
+    try:
+        yield session
+        session.commit()
+    except (SQLAlchemyError, TypeError) as exception:
+        session.rollback()
+        raise RuntimeError('Error while accessing user database: {}'.format(exception))
