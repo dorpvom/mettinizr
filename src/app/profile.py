@@ -1,11 +1,10 @@
-from contextlib import contextmanager
-
 from flask import render_template, request, flash
 from flask_security import current_user
-from sqlalchemy.exc import SQLAlchemyError
 
 from app.security.decorator import roles_accepted
+from app.user import user_db_session
 from database.user_store import password_is_legal
+
 
 # pylint: disable=redefined-outer-name
 
@@ -18,16 +17,6 @@ class ProfileRoutes:
         self._database_interface = database_interface
 
         self._app.add_url_rule('/profile', 'profile', self._show_profile, methods=['GET', 'POST'])
-
-    @contextmanager
-    def user_db_session(self):
-        session = self._user_database.session
-        try:
-            yield session
-            session.commit()
-        except (SQLAlchemyError, TypeError) as exception:
-            session.rollback()
-            raise RuntimeError('Error while accessing user database: {}'.format(exception))
 
     @roles_accepted('user', 'admin')
     def _show_profile(self):
@@ -47,6 +36,6 @@ class ProfileRoutes:
         elif not password_is_legal(new_password):
             flash('Error: password is not legal. Please choose another password.')
         else:
-            with self.user_db_session():
+            with user_db_session(self._user_database):
                 self._database_interface.change_password(current_user.email, new_password)
                 flash('password change successful', 'success')
