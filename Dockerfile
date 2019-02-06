@@ -14,7 +14,6 @@ RUN pip3 install wheel
 
 RUN pip3 install -r requirements.txt
 
-RUN mkdir -p /data/mett && mkdir -p /data/db
 
 WORKDIR /opt/app/src
 
