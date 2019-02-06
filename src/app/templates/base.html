@@ -29,17 +29,17 @@
             <div class="collapse navbar-collapse" id="some-navbar">
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'Dashboard' %} active {% endif %}" href="/">Dashboard</a>
+                        <a class="nav-link {% if active_page == 'Dashboard' %} active {% endif %}" href="{{ url_for("") }}">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'Order' %} active {% endif %}" href="/order">Order</a>
+                        <a class="nav-link {% if active_page == 'Order' %} active {% endif %}" href="{{ url_for("order") }}">Order</a>
                     </li>
                     {% if current_user.has_role('admin') %}
                         <li class="nav-item">
-                            <a class="nav-link {% if active_page == 'Admin' %} active {% endif %}" href="/admin">Admin</a>
+                            <a class="nav-link {% if active_page == 'Admin' %} active {% endif %}" href="{{ url_for("admin") }}">Admin</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if active_page == 'User' %} active {% endif %}" href="/user">Users</a>
+                            <a class="nav-link {% if active_page == 'User' %} active {% endif %}" href="{{ url_for("user") }}">Users</a>
                         </li>
                     {% endif %}
                     {% if current_user.is_authenticated %}
@@ -48,13 +48,13 @@
                                 {{ current_user.email }}
                             </a>
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="/profile">Profile</a>
-                                <a class="dropdown-item" href="/logout">Logout</a>
+                                <a class="dropdown-item" href="{{ url_for("profile") }}">Profile</a>
+                                <a class="dropdown-item" href="{{ url_for("security.logout") }}">Logout</a>
                             </div>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link {% if active_page == 'Login' %} active {% endif %}" href="/login">Login</a>
+                            <a class="nav-link {% if active_page == 'Login' %} active {% endif %}" href="{{ url_for("security.login") }}">Login</a>
                         </li>
                     {% endif %}
                 </ul>

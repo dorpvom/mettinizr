@@ -16,13 +16,13 @@
                 <div class="col-md-auto border border-secondary rounded">
                     <br />
                     {% if order_exists %}
-                        <form action="/admin/close_order" style="display:inline">
+                        <form action="{{ url_for("admin/close_order") }}" style="display:inline">
                             <button class="btn btn-outline-secondary" type="submit">
                                 <i class="fas fa-check"></i> Close order
                             </button>
                         </form>
                         <br /><br />
-                        <form action="/admin/cancel_order" style="display:inline">
+                        <form action="{{ url_for("admin/cancel_order") }}" style="display:inline">
                             <button class="btn btn-outline-secondary" type="submit">
                                 <i class="fas fa-ban"></i> Cancel order
                             </button>
@@ -55,13 +55,13 @@
                 <div class="col-md-1">&nbsp;</div>
                 <div class="col-md-auto border border-primary rounded">
                     <br />
-                    <a class="btn btn-outline-primary" href="/admin/balance"><i class="fas fa-dollar-sign"></i> Change user balance</a>
+                    <a class="btn btn-outline-primary" href="{{ url_for("admin/balance") }}"><i class="fas fa-dollar-sign"></i> Change user balance</a>
                     <br /><br />
-                    <a class="btn btn-outline-primary" href="/admin/formula"><i class="fas fa-calculator"></i> Change mett formula</a>
+                    <a class="btn btn-outline-primary" href="{{ url_for("admin/formula") }}"><i class="fas fa-calculator"></i> Change mett formula</a>
                     <br /><br />
-                    <a class="btn btn-outline-primary" href="/admin/purchase"><i class="fas fa-list"></i> Show purchases</a>
+                    <a class="btn btn-outline-primary" href="{{ url_for("admin/purchase") }}"><i class="fas fa-list"></i> Show purchases</a>
                     <br /><br />
-                    <a class="btn btn-outline-primary" href="/admin/spare"><i class="fas fa-edit"></i> Assign Spare</a>
+                    <a class="btn btn-outline-primary" href="{{ url_for("admin/spare") }}"><i class="fas fa-edit"></i> Assign Spare</a>
                     <br /><br />
                 </div>
             </div>
