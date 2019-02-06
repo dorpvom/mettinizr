@@ -59,4 +59,4 @@ class AppSetup:
         UserRoutes(self.app, self.config, self.mett_store, self.user_database, self.user_interface)
 
         if self.config.getboolean('Runtime', 'behind_proxy'):
-            self.app.wsgi_app = ReverseProxied(self.app.wsgi_app, script_name='/other')
+            self.app.wsgi_app = ReverseProxied(self.app.wsgi_app, script_name='/{}'.format(self.config.get('Runtime', 'proxy_suffix').strip()))
