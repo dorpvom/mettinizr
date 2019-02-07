@@ -24,12 +24,12 @@
                                 <td>{{ purchase['price'] }}</td>
                                 <td>{{ purchase['purpose'] }}</td>
                                 <td>
-                                    <form action="/admin/purchase/authorize/{{ purchase['_id'] }}" style="display:inline">
+                                    <form action="{{ url_for("admin/purchase/authorize/<purchase_id>", purchase_id=purchase['_id']) }}" style="display:inline">
                                         <button class="btn btn-outline-success" type="submit">
                                             Authorize
                                         </button>
                                     </form>
-                                    <form action="/admin/purchase/decline/{{ purchase['_id'] }}" style="display:inline">
+                                    <form action="{{ url_for("admin/purchase/decline/<purchase_id>", purchase_id=purchase['_id']) }}" style="display:inline">
                                         <button class="btn btn-outline-danger" type="submit">
                                             Decline
                                         </button>
