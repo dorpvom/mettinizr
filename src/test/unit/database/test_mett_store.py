@@ -169,8 +169,7 @@ def test_get_order(mock_store):
     mock_store._order.insert_one({'orders': [('order_test_1', 'Weizen'), ('order_test_2', 'Weizen')], 'processed': False, 'expiry_date': HAS_NOT_EXPIRED})
 
     assert mock_store.get_current_user_buns('order_test_1') == {'Weizen': 1, 'Roggen': 0, 'Roeggelchen': 0}
-    # 2 'Weizen' buns are added as spares
-    assert mock_store.get_current_bun_order() == {'Weizen': 4, 'Roggen': 0, 'Roeggelchen': 0}
+    assert mock_store.get_current_bun_order() == {'Weizen': 3, 'Roggen': 1, 'Roeggelchen': 0}
     assert mock_store.get_current_mett_order() == 4 * 66.0
 
 
@@ -178,7 +177,7 @@ def test_spares_with_roeggelchen(mock_store):
     mock_store._account.insert_one({'name': 'order_test', 'balance': 0.0})
     mock_store._order.insert_one({'orders': [('order_test', 'Weizen')], 'processed': False, 'expiry_date': HAS_NOT_EXPIRED})
 
-    assert mock_store.get_current_bun_order() == {'Weizen': 3, 'Roggen': 0, 'Roeggelchen': 0}
+    assert mock_store.get_current_bun_order() == {'Weizen': 2, 'Roggen': 1, 'Roeggelchen': 0}
     mock_store.order_bun('order_test', 'Roeggelchen')
     assert mock_store.get_current_bun_order() == {'Weizen': 2, 'Roggen': 0, 'Roeggelchen': 2}
 
