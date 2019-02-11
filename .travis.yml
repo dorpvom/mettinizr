@@ -1,12 +1,6 @@
-matrix:
-  include:
-    - os: linux
-      dist: trusty
-      python: 3.5
-    - os: linux
-      dist: xenial
-      python: 3.6
+dist: xenial
 language: python
+python: 3.5
 before_install:
   - sudo apt-get update
   - sudo apt-get install libpython3-dev
