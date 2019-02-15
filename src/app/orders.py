@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-from flask import render_template, request
+from flask import flash, render_template, request
 from flask_security import current_user
 
 from app.security.decorator import roles_accepted
@@ -22,8 +20,11 @@ class OrderRoutes:
         if request.method == 'POST':
             mett_order = _get_order_from_request(request)
             user = current_user.email
-            for _ in range(int(mett_order['amount'])):
-                self._mett_store.order_bun(user, mett_order['bun_class'])
+            try:
+                for _ in range(int(mett_order['amount'])):
+                    self._mett_store.order_bun(user, mett_order['bun_class'])
+            except ValueError:
+                flash('Please state amount of buns')
 
         order_exists = self._mett_store.active_order_exists()
         allowed_to_order = not self._mett_store.current_order_is_expired() if order_exists else False
