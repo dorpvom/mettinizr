@@ -34,7 +34,7 @@ class OrderRoutes:
         else:
             buns, mett = None, None
 
-        bun_classes = self._mett_store.list_bun_classes()
+        bun_classes = self._mett_store.list_bun_classes_with_price()
 
         return render_template('order.html', allowed_to_order=allowed_to_order, bun_classes=bun_classes, order_exists=order_exists, buns=buns, mett=mett)
 

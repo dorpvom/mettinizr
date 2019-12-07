@@ -175,8 +175,11 @@ class MettStore:
         bun_order = self.get_current_bun_order()
         return sum(self._get_mett(bun_class) * bun_order[bun_class] for bun_class in bun_order)
 
-    def list_bun_classes(self):
+    def list_bun_classes(self) -> list:
         return [bun['bun_class'] for bun in self._buns.find({}, {'bun_class': 1})]
+
+    def list_bun_classes_with_price(self) -> dict:
+        return {bun['bun_class']: bun['price'] for bun in self._buns.find({}, {'bun_class': 1, 'price': 1})}
 
     # -------------- internal functions --------------
 
