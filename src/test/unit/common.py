@@ -18,6 +18,7 @@ def config_for_tests(tmpdir=None):
     config.set('Runtime', 'testing', 'true')
     config.set('Runtime', 'behind_proxy', 'false')
     config.set('Database', 'main_database', 'mett_test')
+    config.set('User', 'default_role', 'name_that_is_not_used_in_tests')
 
     if tmpdir:
         config.set('Runtime', 'user_database', 'sqlite:///{}'.format(tmpdir.join('user.db')))
