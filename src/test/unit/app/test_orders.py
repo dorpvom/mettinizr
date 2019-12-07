@@ -29,6 +29,7 @@ def test_order_bun(mock_app, app_fixture):
     app_fixture.mett_store.create_order('2099-01-01')
     response = mock_app.get('/order')
     assert b'132.0 g of mett' in response.data
+    assert b'(1.0 ' in response.data
 
     response = mock_app.post('/order', data={'orderAmount': 1, 'orderClass': 'Weizen'})
     assert b'198.0 g of mett' in response.data
