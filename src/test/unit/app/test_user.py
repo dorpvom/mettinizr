@@ -20,6 +20,8 @@ def test_create_user(mock_app, app_fixture):
     response = mock_app.post('/user', data={'new_user': 'a_user', 'new_password': 'a_password'})
     assert b'a_user' in response.data
 
+    assert app_fixture.config.get('User', 'default_role').encode() in response.data
+
 
 def test_add_role(mock_app, app_fixture):
     app_fixture.mett_store.create_account(MockUser.email)

@@ -17,5 +17,6 @@ def mock_app(app_fixture):  # pylint: disable=redefined-outer-name
 
     with simple_session(app_fixture.user_database):
         app_fixture.user_interface.create_user(email=MockUser.email, password=MockUser.password)
+        app_fixture.user_interface.create_role(name=app_fixture.config.get('User', 'default_role'))
 
     return app_fixture.app.test_client()

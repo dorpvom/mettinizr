@@ -73,6 +73,7 @@ class UserRoutes:
 
             with user_db_session(self._user_database):
                 self._user_interface.create_user(email=request.form['new_user'], password=request.form['new_password'])
+                self._user_interface.add_role_to_user(user=self._user_interface.find_user(email=request.form['new_user']), role=self._config.get('User', 'default_role'))
 
             self._mett_store.create_account(request.form['new_user'])
 
