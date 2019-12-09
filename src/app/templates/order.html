@@ -16,7 +16,7 @@
                         <label for="orderClass">Type of bun</label>
                         <select class="form-control" id="orderClass" name="orderClass">
                             {% for bun_class in bun_classes %}
-                                <option>{{ bun_class }} ({{ bun_classes[bun_class] }} €)</option>
+                                <option>{{ bun_class }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -57,6 +57,13 @@
                 <a class="btn btn-outline-primary" href="{{ url_for("order/purchase") }}"><i class="fas fa-shopping-basket"></i> State purchase</a>
             </div>
         </div>
+
+        <div class="row pt-md-2">
+            <div class="col-md-4">
+                <a class="btn btn-outline-primary" href="{{ url_for("order/previous") }}"><i class="fas fa-history"></i> Show ordered items</a>
+            </div>
+        </div>
+
     </div>
 
 {% endblock %}

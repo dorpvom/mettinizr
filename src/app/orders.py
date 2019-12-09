@@ -14,6 +14,7 @@ class OrderRoutes:
 
         self._app.add_url_rule('/order', 'order', self._show_order_home, methods=['GET', 'POST'])
         self._app.add_url_rule('/order/purchase', 'order/purchase', self._state_purpose, methods=['GET', 'POST'])
+        self._app.add_url_rule('/order/previous', 'order/previous', self._show_previous_orders, methods=['GET'])
 
     @roles_accepted('user', 'admin')
     def _show_order_home(self):
@@ -46,6 +47,23 @@ class OrderRoutes:
             return render_template('order.html', bun_classes=self._mett_store.list_bun_classes())
 
         return render_template('order/purchase.html')
+
+    @roles_accepted('user', 'admin')
+    def _show_previous_orders(self):
+        all_information = self._mett_store.get_all_order_information()
+
+        for order in all_information:
+            order['_id'] = str(order['_id'])
+            order['orders'] = rearrange_ordered_buns(order['orders'])
+
+        return render_template('order/previous.html', orders=all_information)
+
+
+def rearrange_ordered_buns(orders):
+    return {
+        user: [bun for name, bun in orders if name == user]
+        for user in {name for name, _ in orders}
+    }
 
 
 def _get_order_from_request(request):
