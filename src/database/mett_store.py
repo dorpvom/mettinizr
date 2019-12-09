@@ -181,6 +181,9 @@ class MettStore:
     def list_bun_classes_with_price(self) -> dict:
         return {bun['bun_class']: bun['price'] for bun in self._buns.find({}, {'bun_class': 1, 'price': 1})}
 
+    def get_all_order_information(self):
+        return list(self._order.find())
+
     # -------------- internal functions --------------
 
     def _calculate_spares(self):

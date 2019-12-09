@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% set active_page = "Order" %}
+
+{% block body %}
+
+    <div class="table-responsive-md">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-flag-checkered"></i></th>
+                    <th>Expiration date</th>
+                    <th>Ordered buns</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in orders %}
+                    <tr>
+                        <td>
+                            {% if item['processed'] %}
+                                <i class="fas fa-flag-checkered"></i>
+                            {% else %}
+                                <i class="fas fa-circle" style="color: #28a745"></i>
+                            {% endif %}
+                        </td>
+                        <td>{{ item['expiry_date'] }}</td>
+                        <td>
+                            <ul>
+                                {% for user in item['orders'] %}
+                                    <li>{{ user }}: {{ item['orders'][user] | string_list }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% endblock %}

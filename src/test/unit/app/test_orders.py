@@ -29,7 +29,6 @@ def test_order_bun(mock_app, app_fixture):
     app_fixture.mett_store.create_order('2099-01-01')
     response = mock_app.get('/order')
     assert b'132.0 g of mett' in response.data
-    assert b'(1.0 ' in response.data
 
     response = mock_app.post('/order', data={'orderAmount': 1, 'orderClass': 'Weizen'})
     assert b'198.0 g of mett' in response.data
@@ -52,3 +51,11 @@ def test_state_purchase(mock_app, app_fixture):
     purchases = app_fixture.mett_store.list_purchases()
     assert purchases
     assert purchases[0]['price'] == 7.32
+
+
+def test_previous_orders(mock_app, app_fixture):
+    app_fixture.mett_store.create_account(MockUser.email)
+    app_fixture.mett_store.create_order('2099-01-01')
+    mock_app.post('/order', data={'orderAmount': 1, 'orderClass': 'Weizen'})
+
+    assert '<li>{}: '.format(MockUser.email) in mock_app.get('/order/previous').data.decode()

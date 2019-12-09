@@ -57,5 +57,7 @@ class AppSetup:
         ProfileRoutes(self.app, self.config, self.user_database, self.user_interface)
         UserRoutes(self.app, self.config, self.mett_store, self.user_database, self.user_interface)
 
+        self.app.jinja_env.filters['string_list'] = lambda string_list: ', '.join(string_list)
+
         if self.config.getboolean('Runtime', 'behind_proxy'):
             self.app.wsgi_app = ReverseProxied(self.app.wsgi_app, script_name='/{}'.format(self.config.get('Runtime', 'proxy_suffix').strip()))
