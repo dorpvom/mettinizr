@@ -83,3 +83,15 @@ def test_create_exists_already(mock_app, app_fixture):
 
     response = mock_app.post('/user', data={'new_user': 'a_user', 'new_password': 'a_password'})
     assert b'user a_user. Might already exist' in response.data
+
+
+def test_change_user_password(mock_app, app_fixture):
+    app_fixture.mett_store.create_account(MockUser.email)
+
+    response = mock_app.post('/user', data={'name': MockUser.email, 'new_password': 'one_password', 'new_password_confirm': 'another_password'})
+    assert b'password did not match' in response.data
+    assert b'change successful' not in response.data
+
+    response = mock_app.post('/user', data={'name': MockUser.email, 'new_password': 'same_password', 'new_password_confirm': 'same_password'})
+    assert b'password did not match' not in response.data
+    assert b'change successful' in response.data

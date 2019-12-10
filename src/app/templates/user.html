@@ -11,6 +11,7 @@
                     <th scope="col">name</th>
                     <th scope="col">balance</th>
                     <th scope="col" colspan="2">roles</th>
+                    <th scope="col">change password</th>
                     <th scope="col">delete</th>
                 </tr>
             </thead>
@@ -84,6 +85,42 @@
                                 </div>
                                 <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#remove_user_role_{{ user['name'] }}"><i class="fas fa-minus"></i></button>
 
+                            </div>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#{{ user['name'] }}_change_password_modal">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            <div id="{{ user['name'] }}_change_password_modal" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Change password</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        </div>
+
+                                        <form method="post">
+                                            <div class="modal-body">
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-lock"></i></span></div>
+                                                    <input id="user_change_password" type="password" class="form-control" name="new_password" placeholder="new password" required>
+                                                </div>
+                                                <br />
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-lock"></i></span></div>
+                                                    <input id="password2" type="password" class="form-control" name="new_password_confirm" placeholder="confirm new password" required>
+                                                </div>
+                                            </div>
+                                            <input id="name" type="hidden" class="form-control" name="name" value="{{ user['name'] }}">
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary" id="{{ user['name'] }}_change_password_button" value="{{ user['name'] }}_change_password">Submit</button>
+                                            </div>
+                                        </form>
+
+                                    </div>
+                                </div>
                             </div>
                         </td>
                         <td>
