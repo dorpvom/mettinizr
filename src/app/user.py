@@ -31,6 +31,10 @@ class UserRoutes:
                 self._handle_added_role()
             elif 'remove_role_username' in request.form:
                 self._handle_removed_role()
+            elif 'new_password_confirm' in request.form:
+                self._handle_password_change()
+            else:
+                flash('Unknown action was requested')
 
         try:
             users = list(self._generate_user_information())
@@ -89,6 +93,19 @@ class UserRoutes:
     def _handle_removed_role(self):
         with user_db_session(self._user_database):
             self._user_interface.remove_role_from_user(user=self._user_interface.find_user(email=request.form['remove_role_username']), role=request.form['removed_role'])
+
+    def _handle_password_change(self):
+        new_password = request.form['new_password']
+        new_password_confirm = request.form['new_password_confirm']
+
+        if new_password != new_password_confirm:
+            flash('Error: new password did not match', 'warning')
+        elif not password_is_legal(new_password):
+            flash('Error: password is not legal. Please choose another password.')
+        else:
+            with user_db_session(self._user_database):
+                self._user_interface.change_password(request.form['name'], new_password)
+                flash('password change successful', 'success')
 
 
 @contextmanager
