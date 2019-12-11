@@ -52,7 +52,7 @@ class AdminRoutes:
     def _change_user_balance(self):
         if request.method == 'POST':
             transaction = _get_change_of_balance(request)
-            self._mett_store.book_money(transaction['user'], float(transaction['amount']))
+            self._mett_store.book_money(transaction['user'], transaction['amount'])
             return render_template('admin.html', order_exists=self._mett_store.active_order_exists())
 
         user_names = [name for _id, name in self._mett_store.list_accounts()]
@@ -102,5 +102,5 @@ class AdminRoutes:
 def _get_change_of_balance(request):
     return {
         'user': request.form['username'],
-        'amount': request.form['amount']
+        'amount': float(request.form['added']) if 'added' in request.form else 0.0 - float(request.form['removed'])
     }
