@@ -55,19 +55,24 @@ def test_delete_user(mock_app, app_fixture):
 
     assert app_fixture.mett_store.account_exists(MockUser.email)
 
-    response = mock_app.get('/user/delete/{}'.format(MockUser.email))
+    response = mock_app.get('/user/delete/{}'.format(MockUser.email), follow_redirects=True)
     assert response.status_code == 200
     assert not app_fixture.mett_store.account_exists(MockUser.email)
 
 
 def test_delete_non_existing_user(mock_app, app_fixture):
-    response = mock_app.get('/user/delete/{}'.format('another'))
+    response = mock_app.get('/user/delete/{}'.format('another'), follow_redirects=True)
     assert b'another does not exist' in response.data
 
     app_fixture.mett_store.create_account('another')
 
-    response = mock_app.get('/user/delete/{}'.format('another'))
+    response = mock_app.get('/user/delete/{}'.format('another'), follow_redirects=True)
     assert b'Failed to delete user' in response.data
+
+
+def test_delete_redirect_correct(mock_app, app_fixture):
+    response = mock_app.get('/user/delete/{}'.format('another'))
+    assert response.location == 'http://localhost/user'
 
 
 def test_create_bad_password(mock_app, app_fixture):
