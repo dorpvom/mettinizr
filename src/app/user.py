@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from contextlib import contextmanager
 
-from flask import render_template, request, flash
+from flask import render_template, request, flash, redirect, url_for
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.security.decorator import roles_accepted
@@ -54,7 +54,7 @@ class UserRoutes:
             flash(str(error), 'warning')
         except RuntimeError:
             flash('Failed to delete user account', 'warning')
-        return self._show_user_home()
+        return redirect(url_for('user'))
 
     def _generate_user_information(self):
         for user in self._user_interface.list_users():
