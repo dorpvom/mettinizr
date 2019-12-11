@@ -11,16 +11,28 @@ def test_admin_home(mock_app, app_fixture):
     assert b'Close order' in response.data
 
 
-def test_book_money(mock_app, app_fixture):
+def test_increase_balance(mock_app, app_fixture):
     app_fixture.mett_store.create_account(MockUser.email)
 
     response = mock_app.get('/admin/balance')
     assert MockUser.email.encode() in response.data
     assert app_fixture.mett_store.get_account_information(MockUser.email)['balance'] == 0.0
 
-    response = mock_app.post('/admin/balance', data={'username': MockUser.email, 'amount': 1.37})
+    response = mock_app.post('/admin/balance', data={'username': MockUser.email, 'added': 1.37})
     assert response.status_code == 200
     assert app_fixture.mett_store.get_account_information(MockUser.email)['balance'] == 1.37
+
+
+def test_decrease_balance(mock_app, app_fixture):
+    app_fixture.mett_store.create_account(MockUser.email)
+
+    response = mock_app.get('/admin/balance')
+    assert MockUser.email.encode() in response.data
+    assert app_fixture.mett_store.get_account_information(MockUser.email)['balance'] == 0.0
+
+    response = mock_app.post('/admin/balance', data={'username': MockUser.email, 'removed': 1.37})
+    assert response.status_code == 200
+    assert app_fixture.mett_store.get_account_information(MockUser.email)['balance'] == -1.37
 
 
 def test_create_order_expired(mock_app, app_fixture):
