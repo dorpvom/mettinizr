@@ -5,6 +5,7 @@ from test.unit.common import MockUser
 @pytest.fixture(scope='function', autouse=True)
 def patch_current_user(monkeypatch):
     monkeypatch.setattr('app.orders.current_user', MockUser())
+    monkeypatch.setattr('app.dashboard.current_user', MockUser())
 
 
 def test_order_home(mock_app, app_fixture):
@@ -30,7 +31,10 @@ def test_order_bun(mock_app, app_fixture):
     response = mock_app.get('/order')
     assert b'132.0 g of mett' in response.data
 
-    response = mock_app.post('/order', data={'orderAmount': 1, 'orderClass': 'Weizen'})
+    response = mock_app.post('/order', data={'orderAmount': 1, 'orderClass': 'Weizen'}, follow_redirects=True)
+    assert b'There is no current order!' not in response.data
+
+    response = mock_app.get('/order')
     assert b'198.0 g of mett' in response.data
 
 
