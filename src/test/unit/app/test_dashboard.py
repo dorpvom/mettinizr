@@ -31,4 +31,4 @@ def test_dashboard_order_history(mock_app, app_fixture):
     app_fixture.mett_store.process_order()
 
     response = mock_app.get('/')
-    assert b'You have ordered a mean of 1.0 buns' in response.data
+    assert b'You have ordered a mean of 1.0 total buns' in response.data

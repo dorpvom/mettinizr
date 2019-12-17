@@ -9,6 +9,26 @@
 
             <div class="row">
                 <div class="col col-md-3">
+                    <p class="alert">Your average order</p>
+                    <table class="table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th scope="col">Bun</th>
+                                <th scope="col">#</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bun in history %}
+                                <tr>
+                                    <td scope="row">{{ bun }}</td>
+                                    <td>{{ history[bun] | round(2) }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <p class="alert">You have ordered a mean of {{ mean_buns | round(2) }} total buns.</p>
+                </div>
+                <div class="col col-md-3">
                     {% if order_exists %}
                         <p class="alert">Current Order</p>
                         <table class="table">
@@ -30,26 +50,6 @@
                     {% else %}
                         <p class="alert">There is no current order!</p>
                     {% endif %}
-                </div>
-                <div class="col col-md-3">
-                    <p class="alert">Order History</p>
-                    <table class="table">
-                        <thead class="thead-light">
-                            <tr>
-                                <th scope="col">Bun</th>
-                                <th scope="col">#</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for bun in history %}
-                                <tr>
-                                    <td scope="row">{{ bun }}</td>
-                                    <td>{{ history[bun] | round(2) }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    <p class="alert">You have ordered a mean of {{ mean_buns | round(2) }} buns.</p>
                 </div>
             </div>
     </div>
