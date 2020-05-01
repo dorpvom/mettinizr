@@ -96,7 +96,7 @@ def test_show_spare_page(mock_app):
 
 def test_assign_spare(mock_app, app_fixture):
     app_fixture.mett_store.create_account(MockUser.email)
-    app_fixture.mett_store.book_money(MockUser.email, 10.0, MockUser.email)
+    app_fixture.mett_store._book_money(MockUser.email, 10.0)
     assert app_fixture.mett_store.get_account_information(MockUser.email)['balance'] == 10.0
 
     response = mock_app.post('/admin/spare', data={'bun': 'Weizen', 'username': MockUser.email})

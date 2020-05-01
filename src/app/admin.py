@@ -77,7 +77,8 @@ class AdminRoutes:
 
     @roles_accepted('admin')
     def _decline_purchase(self, purchase_id):
-        self._mett_store.decline_purchase(purchase_id)
+        admin = current_user.email if not current_user.is_anonymous else 'anonymous'
+        self._mett_store.decline_purchase(purchase_id, admin)
         return self._list_purchases()
 
     @roles_accepted('admin')
