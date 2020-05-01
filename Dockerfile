@@ -14,6 +14,7 @@ RUN pip3 install wheel
 
 RUN pip3 install -r requirements.txt
 
+RUN ./dependencies.sh
 
 WORKDIR /opt/app/src
 
