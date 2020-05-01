@@ -19,9 +19,9 @@ def mock_store(monkeypatch):
 
 def test_book_money(mock_store):
     mock_store._account.insert_one({'name': 'test', 'balance': 0.0})
-    mock_store.book_money('test', 10.0)
+    mock_store.book_money('test', 10.0, 'foo')
     assert mock_store._account.find_one({'name': 'test'})['balance'] == 10.0
-    mock_store.book_money('test', 3.3)
+    mock_store.book_money('test', 3.3, 'foo')
     assert mock_store._account.find_one({'name': 'test'})['balance'] == 13.3
 
 
@@ -115,7 +115,7 @@ def test_state_purchase(mock_store):
 def test_authorize_purchase(mock_store):
     mock_store.create_account('test')
     purchase_id = mock_store._purchase.insert_one({'account': 'test', 'price': 1.23, 'purpose': 'any', 'processed': False}).inserted_id
-    mock_store.authorize_purchase(purchase_id)
+    mock_store.authorize_purchase(purchase_id, 'foo')
     assert mock_store._purchase.find_one({'_id': purchase_id})['processed']
     assert mock_store._account.find_one({'name': 'test'})['balance'] == 1.23
 

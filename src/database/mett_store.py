@@ -49,13 +49,13 @@ class MettStore:
             raise StorageException('Account {} does not exist'.format(name))
         return self._account.delete_one({'name': name}).deleted_count
 
+    def change_balance(self, account, amount, admin):
+        self.book_money(account, amount, admin)
+        self._deposit.insert_one({'admin': admin, 'user': account, 'amount': amount})
+
     def book_money(self, account, amount, admin):
         # Increase balance of account by amount and register deposit by admin
-        if amount < 0.0:
-            self._account.update_one({'name': account}, {'$dec': {'balance': - amount}})
-        else:
-            self._account.update_one({'name': account}, {'$inc': {'balance': amount}})
-        self._deposit.insert_one({'admin': admin, 'user': account, 'amount': amount})
+        self._account.update_one({'name': account}, {'$inc': {'balance': amount}})
 
     def get_deposits(self, limit=None, offset=None):
         deposits = self._deposit.find()
@@ -90,10 +90,10 @@ class MettStore:
             purchase['_id'] = str(purchase['_id'])
         return purchases
 
-    def authorize_purchase(self, purchase_id):
+    def authorize_purchase(self, purchase_id, admin):
         # add purchase.amount to purchase.account.balance
         purchase = self._purchase.find_one({'_id': ObjectId(purchase_id)})
-        self.book_money(purchase['account'], float(purchase['price']))
+        self.book_money(purchase['account'], float(purchase['price']), admin)
         self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': True}})
 
     def decline_purchase(self, purchase_id):
