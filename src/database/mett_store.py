@@ -1,9 +1,11 @@
 '''
-account: id, name, balance (name private_key)
+account: id, name, balance (name primary key)
 order: id, processed, expiry_date, orders (orders list of (account, bun), with account foreign_key on account.id and bun foreign_key on price.id)
 buns: id, bun_class, price, mett
 purchase: id, account, price, purpose, processed (account foreign_key on accound.name)
+deposits: id, admin, user, amount (admin fk account.name, user fk account.name)
 '''
+
 import datetime
 
 from bson.objectid import ObjectId
@@ -26,6 +28,7 @@ class MettStore:
         self._order = self._mett_base.order
         self._buns = self._mett_base.price
         self._purchase = self._mett_base.purchase
+        self._deposit = self._mett_base.deposit
 
         self._init_tables()
 
@@ -46,9 +49,23 @@ class MettStore:
             raise StorageException('Account {} does not exist'.format(name))
         return self._account.delete_one({'name': name}).deleted_count
 
-    def book_money(self, account, amount):
-        # Increase balance of account by amount
-        self._account.update_one({'name': account}, {'$inc': {'balance': amount}})
+    def book_money(self, account, amount, admin):
+        # Increase balance of account by amount and register deposit by admin
+        if amount < 0.0:
+            self._account.update_one({'name': account}, {'$dec': {'balance': - amount}})
+        else:
+            self._account.update_one({'name': account}, {'$inc': {'balance': amount}})
+        self._deposit.insert_one({'admin': admin, 'user': account, 'amount': amount})
+
+    def get_deposits(self, limit=None, offset=None):
+        deposits = self._deposit.find()
+        return [
+            {
+                'amount': deposit['amount'],
+                'user': deposit['user'],
+                'admin': deposit['admin']
+            } for deposit in deposits
+        ]
 
     def list_accounts(self):
         # return list of (accound.id, account.name) tuples

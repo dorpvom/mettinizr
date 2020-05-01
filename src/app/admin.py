@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import render_template, request, flash
-
+from flask_security import current_user
 from app.security.decorator import roles_accepted
 from database.mett_store import StorageException
 
@@ -26,6 +26,8 @@ class AdminRoutes:
         self._app.add_url_rule('/admin/purchase', 'admin/purchase', self._list_purchases, methods=['GET'])
         self._app.add_url_rule('/admin/purchase/authorize/<purchase_id>', 'admin/purchase/authorize/<purchase_id>', self._authorize_purchase, methods=['GET'])
         self._app.add_url_rule('/admin/purchase/decline/<purchase_id>', 'admin/purchase/decline/<purchase_id>', self._decline_purchase, methods=['GET'])
+
+        self._app.add_url_rule('/admin/deposit', 'admin/deposit', self._list_deposits, methods=['GET'])
 
     @roles_accepted('admin')
     def _show_admin_home(self):
@@ -52,7 +54,7 @@ class AdminRoutes:
     def _change_user_balance(self):
         if request.method == 'POST':
             transaction = _get_change_of_balance(request)
-            self._mett_store.book_money(transaction['user'], transaction['amount'])
+            self._mett_store.book_money(account=transaction['user'], amount=transaction['amount'], admin=current_user.email)
             return render_template('admin.html', order_exists=self._mett_store.active_order_exists())
 
         user_names = [name for _id, name in self._mett_store.list_accounts()]
@@ -97,6 +99,11 @@ class AdminRoutes:
             self._mett_store.change_mett_formula(request.form['bun'], request.form['amount'])
         else:
             raise RuntimeError('No change applied')
+
+    @roles_accepted('admin')
+    def _list_deposits(self):
+        deposits = self._mett_store.get_deposits(limit=None, offset=None)
+        return render_template('admin/deposit.html', deposits=deposits)
 
 
 def _get_change_of_balance(request):
