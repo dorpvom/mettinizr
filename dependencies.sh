@@ -31,3 +31,22 @@ then
 else
   echo "Datepicker up to date"
 fi
+
+# jQuery
+if [ ! -d src/app/static/jquery ]
+then
+  (mkdir src/app/static/jquery 2> /dev/null) || true
+  wget https://code.jquery.com/jquery-3.5.0.min.js -O src/app/static/jquery/jquery-3.5.0.min.js
+  wget https://code.jquery.com/jquery-3.5.0.min.map -O src/app/static/jquery/jquery-3.5.0.min.map
+else
+  echo "jQuery up to date"
+fi
+
+# Popper
+if [ ! -d src/app/static/popper ]
+then
+  (mkdir src/app/static/popper 2> /dev/null) || true
+  wget https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.4.0/umd/popper.min.js -O src/app/static/popper/popper.min.js
+else
+  echo "Popper.js up to date"
+fi

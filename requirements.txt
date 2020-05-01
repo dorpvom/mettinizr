@@ -10,3 +10,4 @@ flask_sqlalchemy
 bcrypt
 uwsgi
 pylint
+email_validator
