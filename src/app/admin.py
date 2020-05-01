@@ -108,7 +108,7 @@ class AdminRoutes:
 
     @roles_accepted('admin')
     def _list_deposits(self):
-        deposits = self._mett_store.get_deposits(limit=None, offset=None)
+        deposits = self._mett_store.get_deposits()
         return render_template('admin/deposit.html', deposits=deposits)
 
 

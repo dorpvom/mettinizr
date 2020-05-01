@@ -1,6 +1,7 @@
 import os
 from configparser import ConfigParser
 from pathlib import Path
+from time import localtime, strftime
 
 from flask import Flask
 
@@ -20,8 +21,20 @@ class Filter:
 
         self._init_filter()
 
+    @staticmethod
+    def _unix_time_to_string(unix_time_stamp):
+        '''
+        input unix_time_stamp
+        output string 'YYYY-MM-DD HH:MM:SS'
+        '''
+        if isinstance(unix_time_stamp, (float, int)):
+            tmp = localtime(unix_time_stamp)
+            return strftime('%Y-%m-%d %H:%M:%S', tmp)
+        return unix_time_stamp
+
     def _init_filter(self):
         self._app.jinja_env.filters['string_list'] = lambda string_list: ', '.join([str(string) for string in string_list])
+        self._app.jinja_env.filters['time_string'] = self._unix_time_to_string
 
 
 class ReverseProxied:

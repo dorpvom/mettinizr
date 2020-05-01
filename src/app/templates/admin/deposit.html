@@ -14,6 +14,7 @@
                             <th scope="col">User</th>
                             <th scope="col">Amount</th>
                             <th scope="col">Admin</th>
+                            <th scope="col">Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -22,6 +23,7 @@
                                 <td>{{ deposit['user'] }}</td>
                                 <td>{{ deposit['amount'] }}</td>
                                 <td>{{ deposit['admin'] }}</td>
+                                <td>{{ deposit['timestamp'] | time_string }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

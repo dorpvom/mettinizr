@@ -58,13 +58,14 @@ class MettStore:
         # Increase balance of account by amount and register deposit by admin
         self._account.update_one({'name': account}, {'$inc': {'balance': amount}})
 
-    def get_deposits(self, limit=None, offset=None):
+    def get_deposits(self):
         deposits = self._deposit.find()
         return [
             {
                 'amount': deposit['amount'],
                 'user': deposit['user'],
-                'admin': deposit['admin']
+                'admin': deposit['admin'],
+                'timestamp': deposit['timestamp']
             } for deposit in deposits
         ]
 
