@@ -62,7 +62,7 @@ def test_delete_user(mock_app, app_fixture):
 
 def test_delete_non_existing_user(mock_app, app_fixture):
     response = mock_app.get('/user/delete/{}'.format('another'), follow_redirects=True)
-    assert b'another does not exist' in response.data
+    assert b'No existing account another' in response.data
 
     app_fixture.mett_store.create_account('another')
 

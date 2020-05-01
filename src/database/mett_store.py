@@ -1,10 +1,13 @@
 '''
-account: id, name, balance (name private_key)
+account: id, name, balance (name primary key)
 order: id, processed, expiry_date, orders (orders list of (account, bun), with account foreign_key on account.id and bun foreign_key on price.id)
 buns: id, bun_class, price, mett
 purchase: id, account, price, purpose, processed (account foreign_key on accound.name)
+deposits: id, admin, user, amount (admin fk account.name, user fk account.name)
 '''
+
 import datetime
+from time import time
 
 from bson.objectid import ObjectId
 from pymongo import MongoClient
@@ -26,6 +29,7 @@ class MettStore:
         self._order = self._mett_base.order
         self._buns = self._mett_base.price
         self._purchase = self._mett_base.purchase
+        self._deposit = self._mett_base.deposit
 
         self._init_tables()
 
@@ -46,9 +50,24 @@ class MettStore:
             raise StorageException('Account {} does not exist'.format(name))
         return self._account.delete_one({'name': name}).deleted_count
 
-    def book_money(self, account, amount):
-        # Increase balance of account by amount
+    def change_balance(self, account, amount, admin):
+        self._book_money(account, amount)
+        self._deposit.insert_one({'admin': admin, 'user': account, 'amount': amount, 'timestamp': time()})
+
+    def _book_money(self, account, amount):
+        # Increase balance of account by amount and register deposit by admin
         self._account.update_one({'name': account}, {'$inc': {'balance': amount}})
+
+    def get_deposits(self):
+        deposits = self._deposit.find()
+        return [
+            {
+                'amount': deposit['amount'],
+                'user': deposit['user'],
+                'admin': deposit['admin'],
+                'timestamp': deposit['timestamp']
+            } for deposit in deposits
+        ]
 
     def list_accounts(self):
         # return list of (accound.id, account.name) tuples
@@ -67,21 +86,21 @@ class MettStore:
 
     def list_purchases(self, processed=False):
         # list purchases, if processed is false only those that have not been authorized or declined
-        query = {} if processed else {'processed': False}
+        query = {} if processed else {'processed.authorized': False}
         purchases = list(self._purchase.find(query, {'account': 1, 'price': 1, '_id': 1, 'purpose': 1}))
         for purchase in purchases:
             purchase['_id'] = str(purchase['_id'])
         return purchases
 
-    def authorize_purchase(self, purchase_id):
+    def authorize_purchase(self, purchase_id, admin):
         # add purchase.amount to purchase.account.balance
         purchase = self._purchase.find_one({'_id': ObjectId(purchase_id)})
-        self.book_money(purchase['account'], float(purchase['price']))
-        self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': True}})
+        self._book_money(purchase['account'], float(purchase['price']))
+        self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': {'authorized': True, 'at': time(), 'by': admin}}})
 
-    def decline_purchase(self, purchase_id):
+    def decline_purchase(self, purchase_id, admin):
         # drop purchase
-        self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': True}})
+        self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': {'authorized': True, 'at': time(), 'by': admin}}})
 
     def change_mett_formula(self, bun, amount):
         # set mett_formula.amount for referenced bun
@@ -125,7 +144,7 @@ class MettStore:
 
     def state_purchase(self, account, amount, purpose):
         # add account, amount, purpose as non processed purchase
-        result = self._purchase.insert_one({'account': account, 'price': amount, 'purpose': purpose, 'processed': False})
+        result = self._purchase.insert_one({'account': account, 'price': amount, 'purpose': purpose, 'timestamp': time(), 'processed': {'authorized': False, 'at': None, 'by': None}})
         return result.inserted_id
 
     def get_order_history(self, user):

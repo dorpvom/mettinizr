@@ -11,61 +11,74 @@
 
 {% block body %}
 
-    <div class="container">
-            <div class="row">
-                <div class="col-md-auto border border-secondary rounded">
-                    <br />
-                    {% if order_exists %}
-                        <form action="{{ url_for("admin/close_order") }}" style="display:inline">
-                            <button class="btn btn-outline-secondary" type="submit">
-                                <i class="fas fa-check"></i> Close order
-                            </button>
-                        </form>
-                        <br /><br />
-                        <form action="{{ url_for("admin/cancel_order") }}" style="display:inline">
-                            <button class="btn btn-outline-secondary" type="submit">
-                                <i class="fas fa-ban"></i> Cancel order
-                            </button>
-                        </form>
-                    {% else %}
-                        <form method=post enctype=multipart/form-data action="">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Expiry date</span>
-                                </div>
-                                <input type="text" class="form-control" value="2019-01-01" id="datepicker-div" name="expiry">
-                                <script type="text/javascript">
-                                    $(function () {
-                                        $('#datepicker-div').datepicker({
-                                            format: 'yyyy-mm-dd',
-                                            todayHighlight: true
-                                        });
-                                    });
-                                </script>
-                                <div class="input-group-append">
-                                    <button class="btn btn-secondary" type="submit" value=submit>
-                                        <i class="fas fa-plus"></i> Create order
-                                    </button>
-                                </div>
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-xl-3 col-lg-5 col-md-8 m-3">
+                {% if order_exists %}
+                    <form action="{{ url_for("admin/close_order") }}" style="display:inline">
+                        <button class="btn btn-outline-secondary my-2" type="submit">
+                            <i class="fas fa-check"></i> Close order
+                        </button>
+                    </form>
+                    <form action="{{ url_for("admin/cancel_order") }}" style="display:inline">
+                        <button class="btn btn-outline-secondary my-2" type="submit">
+                            <i class="fas fa-ban"></i> Cancel order
+                        </button>
+                    </form>
+                {% else %}
+                    <form method=post enctype=multipart/form-data action="">
+                        <div class="input-group my-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
                             </div>
-                        </form>
-                    {% endif %}
-                    <br /><br />
-                </div>
-                <div class="col-md-1">&nbsp;</div>
-                <div class="col-md-auto border border-primary rounded">
-                    <br />
-                    <a class="btn btn-outline-primary" href="{{ url_for("admin/balance") }}"><i class="fas fa-dollar-sign"></i> Change user balance</a>
-                    <br /><br />
-                    <a class="btn btn-outline-primary" href="{{ url_for("admin/formula") }}"><i class="fas fa-calculator"></i> Change mett formula</a>
-                    <br /><br />
-                    <a class="btn btn-outline-primary" href="{{ url_for("admin/purchase") }}"><i class="fas fa-list"></i> Show purchases</a>
-                    <br /><br />
-                    <a class="btn btn-outline-primary" href="{{ url_for("admin/spare") }}"><i class="fas fa-edit"></i> Assign Spare</a>
-                    <br /><br />
+                            <input type="text" class="form-control" placeholder="Expiration date" id="datepicker-div" name="expiry">
+                            <script type="text/javascript">
+                                $(function () {
+                                    $('#datepicker-div').datepicker({
+                                        format: 'yyyy-mm-dd',
+                                        todayHighlight: true
+                                    });
+                                });
+                            </script>
+                            <div class="input-group-append">
+                                <button class="btn btn-secondary" type="submit" value=submit>
+                                    <i class="fas fa-plus"></i> Create order
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+            <div class="col-xl-2 col-lg-4 col-md-6 m-3">
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item" href="{{ url_for("admin/balance") }}"><i class="fas fa-dollar-sign"></i> Change user balance</a>
+                    <a class="list-group-item" href="{{ url_for("admin/formula") }}"><i class="fas fa-calculator"></i> Change mett formula</a>
+                    <a class="list-group-item" href="{{ url_for("admin/purchase") }}"><i class="fas fa-list"></i> Show purchases</a>
+                    <a class="list-group-item" href="{{ url_for("admin/deposit") }}"><i class="fas fa-list"></i> Show deposits</a>
+                    <a class="list-group-item" href="{{ url_for("admin/spare") }}"><i class="fas fa-edit"></i> Assign Spare</a>
                 </div>
             </div>
-        </form>
+            <div class="col-xl-3 col-lg-5 col-md-8 m-3">
+                <table class="table table-borderless">
+                    <tr>
+                        <th scope="col">Sum of all deposits</th>
+                        <td>{{ store_stats['sum_of_deposits'] }} $</td>
+                    </tr>
+                    <tr>
+                        <th scope="col">Sum of all purchases</th>
+                        <td>{{ store_stats['sum_of_purchases'] }} $</td>
+                    </tr>
+                    <tr>
+                        <th scope="col">Virtual balance</th>
+                        <td>{{ store_stats['balance'] }} $</td>
+                    </tr>
+                    <tr>
+                        <th scope="col">Total number of ordered buns</th>
+                        <td>{{ store_stats['sum_of_buns'] }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
     </div>
 
 {% endblock %}

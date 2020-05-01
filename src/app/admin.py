@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
+from typing import Dict, Union
 
 from flask import render_template, request, flash
-
+from flask_security import current_user
 from app.security.decorator import roles_accepted
-from database.mett_store import StorageException
+from database.mett_store import StorageException, MettStore
+
 
 # pylint: disable=redefined-outer-name
 
 
 class AdminRoutes:
-    def __init__(self, app, config, mett_store):
+    def __init__(self, app, config, mett_store: MettStore):
         self._app = app
         self._config = config
         self._mett_store = mett_store
@@ -27,6 +29,8 @@ class AdminRoutes:
         self._app.add_url_rule('/admin/purchase/authorize/<purchase_id>', 'admin/purchase/authorize/<purchase_id>', self._authorize_purchase, methods=['GET'])
         self._app.add_url_rule('/admin/purchase/decline/<purchase_id>', 'admin/purchase/decline/<purchase_id>', self._decline_purchase, methods=['GET'])
 
+        self._app.add_url_rule('/admin/deposit', 'admin/deposit', self._list_deposits, methods=['GET'])
+
     @roles_accepted('admin')
     def _show_admin_home(self):
         if request.method == 'POST':
@@ -36,7 +40,7 @@ class AdminRoutes:
             except (StorageException, ValueError) as error:
                 flash(str(error), 'warning')
 
-        return render_template('admin.html', order_exists=self._mett_store.active_order_exists())
+        return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
 
     @roles_accepted('admin')
     def _cancel_order(self):
@@ -52,8 +56,10 @@ class AdminRoutes:
     def _change_user_balance(self):
         if request.method == 'POST':
             transaction = _get_change_of_balance(request)
-            self._mett_store.book_money(transaction['user'], transaction['amount'])
-            return render_template('admin.html', order_exists=self._mett_store.active_order_exists())
+            admin = current_user.email if not current_user.is_anonymous else 'anonymous'
+            self._mett_store.change_balance(account=transaction['user'], amount=transaction['amount'], admin=admin)
+
+            return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
 
         user_names = [name for _id, name in self._mett_store.list_accounts()]
         return render_template('admin/balance.html', users=user_names)
@@ -65,12 +71,14 @@ class AdminRoutes:
 
     @roles_accepted('admin')
     def _authorize_purchase(self, purchase_id):
-        self._mett_store.authorize_purchase(purchase_id)
+        admin = current_user.email if not current_user.is_anonymous else 'anonymous'
+        self._mett_store.authorize_purchase(purchase_id, admin)
         return self._list_purchases()
 
     @roles_accepted('admin')
     def _decline_purchase(self, purchase_id):
-        self._mett_store.decline_purchase(purchase_id)
+        admin = current_user.email if not current_user.is_anonymous else 'anonymous'
+        self._mett_store.decline_purchase(purchase_id, admin)
         return self._list_purchases()
 
     @roles_accepted('admin')
@@ -87,7 +95,7 @@ class AdminRoutes:
     def _assign_spare(self):
         if request.method == 'POST':
             self._mett_store.assign_spare(bun_class=request.form['bun'], user=request.form['username'])
-            return render_template('admin.html', order_exists=self._mett_store.active_order_exists())
+            return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
         return render_template('admin/spare.html', bun_classes=self._mett_store.list_bun_classes(), users=[name for _id, name in self._mett_store.list_accounts()])
 
     def _apply_change_to_formula(self, request):
@@ -98,9 +106,25 @@ class AdminRoutes:
         else:
             raise RuntimeError('No change applied')
 
+    @roles_accepted('admin')
+    def _list_deposits(self):
+        deposits = self._mett_store.get_deposits()
+        return render_template('admin/deposit.html', deposits=deposits)
+
 
 def _get_change_of_balance(request):
     return {
         'user': request.form['username'],
         'amount': float(request.form['added']) if 'added' in request.form else 0.0 - float(request.form['removed'])
+    }
+
+
+def get_store_stats(mett_store: MettStore) -> Dict[str, Union[int, float]]:
+    deposits = sum(deposit['amount'] for deposit in mett_store.get_deposits())
+    purchases = sum(purchase['price'] for purchase in mett_store.list_purchases(processed=True))
+    return {
+        'sum_of_deposits': deposits,
+        'sum_of_purchases': purchases,
+        'balance': deposits - purchases,
+        'sum_of_buns': sum(len(order['orders']) for order in mett_store.get_all_order_information()),
     }

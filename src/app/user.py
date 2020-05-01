@@ -2,6 +2,7 @@
 from contextlib import contextmanager
 
 from flask import render_template, request, flash, redirect, url_for
+from flask_security import current_user
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.security.decorator import roles_accepted
@@ -47,6 +48,9 @@ class UserRoutes:
     @roles_accepted('admin')
     def _delete_user(self, name):
         try:
+            admin = current_user.email if not current_user.is_anonymous else 'anonymous'
+            balance = self._mett_store.get_account_information(name)['balance']
+            self._mett_store.change_balance(name, -balance, admin)
             self._mett_store.delete_account(name)
             with user_db_session(self._user_database):
                 self._user_interface.delete_user(user=self._user_interface.find_user(email=name))

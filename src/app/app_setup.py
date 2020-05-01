@@ -1,6 +1,7 @@
 import os
 from configparser import ConfigParser
 from pathlib import Path
+from time import localtime, strftime
 
 from flask import Flask
 
@@ -11,6 +12,29 @@ from app.profile import ProfileRoutes
 from app.security.authentication import add_flask_security_to_app
 from app.user import UserRoutes
 from database.mett_store import MettStore
+
+
+class Filter:
+    def __init__(self, app, config):
+        self._app = app
+        self._config = config
+
+        self._init_filter()
+
+    @staticmethod
+    def _unix_time_to_string(unix_time_stamp):
+        '''
+        input unix_time_stamp
+        output string 'YYYY-MM-DD HH:MM:SS'
+        '''
+        if isinstance(unix_time_stamp, (float, int)):
+            tmp = localtime(unix_time_stamp)
+            return strftime('%Y-%m-%d %H:%M:%S', tmp)
+        return unix_time_stamp
+
+    def _init_filter(self):
+        self._app.jinja_env.filters['string_list'] = lambda string_list: ', '.join([str(string) for string in string_list])
+        self._app.jinja_env.filters['time_string'] = self._unix_time_to_string
 
 
 class ReverseProxied:
@@ -56,8 +80,7 @@ class AppSetup:
         AdminRoutes(self.app, self.config, self.mett_store)
         ProfileRoutes(self.app, self.config, self.user_database, self.user_interface)
         UserRoutes(self.app, self.config, self.mett_store, self.user_database, self.user_interface)
-
-        self.app.jinja_env.filters['string_list'] = lambda string_list: ', '.join(string_list)
+        Filter(self.app, self.config)
 
         if self.config.getboolean('Runtime', 'behind_proxy'):
             self.app.wsgi_app = ReverseProxied(self.app.wsgi_app, script_name='/{}'.format(self.config.get('Runtime', 'proxy_suffix').strip()))
