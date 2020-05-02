@@ -4,66 +4,68 @@
 
 {% block body %}
 
-    <div class="container">
-        {% if allowed_to_order %}
-            <form method=post enctype=multipart/form-data action="">
-                <div class="row border rounded">
-                    <div class="form-group col-md-1">
-                        <label for="orderAmount">Number of buns</label>
-                        <input type="number" step="1" min="0" class="form-control" id="orderAmount" name="orderAmount">
+    <div class="row justify-content-center">
+        <div class="col-xl-4 col-lg-6 col-md-10">
+            {% if order_exists %}
+                <div class="card">
+                    <div class="card-header bg-primary text-white">Current total order</div>
+                    <div class="card-body p-0">
+                        <table class="table mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Bun</th>
+                                    <th scope="col">#</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bun in buns %}
+                                    <tr>
+                                        <td>{{ bun }}</td>
+                                        <td>{{ buns[bun] }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="form-group col-md-4">
-                        <label for="orderClass">Type of bun</label>
-                        <select class="form-control" id="orderClass" name="orderClass">
+                    <div class="card-footer bg-transparent">
+                        That makes {{ mett | round }} g of mett.
+                    </div>
+                </div>
+            {% else %}
+                <p class="alert alert-warning">There is no current order!</p>
+            {% endif %}
+        </div>
+
+        {% if allowed_to_order %}
+            <div class="col-xl-4 col-lg-6 col-md-10 mt-3">
+                <form method=post enctype=multipart/form-data action="">
+                    <div class="form-row">
+                        <label for="orderAmount" class="col mr-1">Number of buns</label>
+                        <label for="orderClass" class="col mr-1">Type of bun</label>
+                        <span class="col"></span>
+                    </div>
+                    <div class="form-row">
+                        <input type="number" step="1" min="0" class="form-control col mr-1" id="orderAmount" name="orderAmount">
+                        <select class="form-control col mr-1" id="orderClass" name="orderClass">
                             {% for bun_class in bun_classes %}
                                 <option>{{ bun_class }}</option>
                             {% endfor %}
                         </select>
+                        <button type="submit" value=submit class="btn btn-outline-primary col"><i class="fas fa-cart-plus"></i> Order</button>
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" value=submit class="btn btn-outline-primary"><i class="fas fa-cart-plus"></i> Order</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         {% endif %}
-        {% if order_exists %}
-            <div class="row">
-                <div class="col-md-4">
-                    <p class="alert">Current total order</p>
-                    <table class="table">
-                        <thead class="thead-light">
-                            <tr>
-                                <th scope="col">Bun</th>
-                                <th scope="col">#</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for bun in buns %}
-                                <tr>
-                                    <td scope="row">{{ bun }}</td>
-                                    <td>{{ buns[bun] }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    <p class="alert">That makes {{ mett | round }} g of mett.</p>
-                </div>
-            </div>
-        {% else %}
-            <p class="alert">There is no current order!</p>
-        {% endif %}
-        <div class="row">
-            <div class="col-md-4">
-                <a class="btn btn-outline-primary" href="{{ url_for("order/purchase") }}"><i class="fas fa-shopping-basket"></i> State purchase</a>
-            </div>
-        </div>
-
-        <div class="row pt-md-2">
-            <div class="col-md-4">
-                <a class="btn btn-outline-primary" href="{{ url_for("order/previous") }}"><i class="fas fa-history"></i> Show ordered items</a>
-            </div>
-        </div>
-
     </div>
+
+    <div class="row justify-content-start mt-3">
+        <div class="offset-xl-2 col-xl-2 col-lg-4 col-md-6">
+            <div class="list-group list-group-flush">
+                <a class="list-group-item" href="{{ url_for("order/purchase") }}"><i class="fas fa-shopping-basket"></i> State purchase</a>
+                <a class="list-group-item" href="{{ url_for("order/previous") }}"><i class="fas fa-history"></i> Show ordered items</a>
+            </div>
+        </div>
+    </div>
+
 
 {% endblock %}

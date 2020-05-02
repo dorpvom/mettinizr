@@ -30,6 +30,7 @@ class AdminRoutes:
         self._app.add_url_rule('/admin/purchase/decline/<purchase_id>', 'admin/purchase/decline/<purchase_id>', self._decline_purchase, methods=['GET'])
 
         self._app.add_url_rule('/admin/deposit', 'admin/deposit', self._list_deposits, methods=['GET'])
+        self._app.add_url_rule('/admin/assign', 'admin/assign', self._assign_bun, methods=['GET', 'POST'])
 
     @roles_accepted('admin')
     def _show_admin_home(self):
@@ -110,6 +111,13 @@ class AdminRoutes:
     def _list_deposits(self):
         deposits = self._mett_store.get_deposits()
         return render_template('admin/deposit.html', deposits=deposits)
+
+    @roles_accepted('admin')
+    def _assign_bun(self):
+        if request.method == 'POST':
+            self._mett_store.order_bun(request.form['username'], request.form['bun'])
+            return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
+        return render_template('admin/assign.html', bun_classes=self._mett_store.list_bun_classes(), users=[name for _id, name in self._mett_store.list_accounts()], order_exists=self._mett_store.active_order_exists())
 
 
 def _get_change_of_balance(request):
