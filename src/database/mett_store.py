@@ -142,6 +142,27 @@ class MettStore:
         orders.append((account, bun_class))
         self._order.update_one({'_id': current_order['_id']}, {'$set': {'orders': orders}})
 
+    def reroute_bun(self, bun_class, user, target):
+        user_buns = self.get_current_user_buns(user)
+        if user_buns[bun_class] == 0:
+            raise ValueError('No {} bun order by {}'.format(bun_class, user))
+        current_order = self._get_current_order()
+        new_orders = self._reroute_from_user_to_target(bun_class, current_order, target, user)
+        self._order.update_one({'_id': current_order['_id']}, {'$set': {'orders': new_orders}})
+
+    @staticmethod
+    def _reroute_from_user_to_target(bun_class, current_order, target, user):
+        new_orders, rerouted = [], False
+        for account, ordered_bun in current_order['orders']:
+            if account == user and ordered_bun == bun_class and not rerouted:
+                new_orders.append((target, ordered_bun))
+                rerouted = True
+            else:
+                new_orders.append((account, ordered_bun))
+        if not rerouted:
+            raise ValueError('Unknown problem in rerouting order')
+        return new_orders
+
     def state_purchase(self, account, amount, purpose):
         # add account, amount, purpose as non processed purchase
         result = self._purchase.insert_one({'account': account, 'price': amount, 'purpose': purpose, 'timestamp': time(), 'processed': {'authorized': False, 'at': None, 'by': None}})
