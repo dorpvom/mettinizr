@@ -4,46 +4,43 @@
 
 {% block body %}
 
-    <div class="container">
-        <form method=post enctype=multipart/form-data action="" id="mett">
-            <div class="row">
-                <div class="form-group col-md-2">
-                    <label for="bunMett">Bun</label>
-                    <select class="form-control" id="bunMett" name="bun">
-                        {% for bun in bun_classes %}
-                            <option>{{ bun }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-md-2">
-                    <label for="amount">Mett amount</label>
-                    <input type="number" step="0.01" min="0" class="form-control" id="amount" name="amount">
-                </div>
+    <form method=post enctype=multipart/form-data action="" id="mett">
+        <div class="row justify-content-center mt-4">
+            <div class="form-group col-md-2">
+                <label for="bunMett">Bun</label>
+                <select class="form-control" id="bunMett" name="bun">
+                    {% for bun in bun_classes %}
+                        <option>{{ bun }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="row">
-                <button type="submit" value=submit class="btn btn-outline-primary">Save mett amount</button>
+            <div class="form-group col-md-2">
+                <label for="amount">Mett amount</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="amount" name="amount">
             </div>
-        </form>
-        <form method=post enctype=multipart/form-data action="" id="price">
-            <div class="row">
-                <div class="form-group col-md-2">
-                    <label for="bunPrice">Bun</label>
-                    <select class="form-control" id="bunPrice" name="bun">
-                        {% for bun in bun_classes %}
-                            <option>{{ bun }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group col-md-2">
-                    <label for="price">Bun price</label>
-                    <input type="number" step="0.01" min="0" class="form-control" id="price" name="price">
-                </div>
+        </div>
+        <div class="row justify-content-center">
+            <button type="submit" value=submit class="btn btn-outline-primary">Save mett amount</button>
+        </div>
+    </form>
+    <form method=post enctype=multipart/form-data action="" id="price">
+        <div class="row justify-content-center mt-3">
+            <div class="form-group col-md-2">
+                <label for="bunPrice">Bun</label>
+                <select class="form-control" id="bunPrice" name="bun">
+                    {% for bun in bun_classes %}
+                        <option>{{ bun }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="row">
-                <button type="submit" value=submit class="btn btn-outline-primary">Save bun price</button>
+            <div class="form-group col-md-2">
+                <label for="price">Bun price</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="price" name="price">
             </div>
-        </form>
-
-    </div>
+        </div>
+        <div class="row justify-content-center">
+            <button type="submit" value=submit class="btn btn-outline-primary">Save bun price</button>
+        </div>
+    </form>
 
 {% endblock %}

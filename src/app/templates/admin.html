@@ -11,8 +11,8 @@
 
 {% block body %}
 
-    <div class="row justify-content-center">
-        <div class="col-xl-2 col-lg-4 col-md-6 m-3">
+    <div class="row justify-content-center mt-2">
+        <div class="col-xl-2 col-lg-3 col-md-4 mt-3">
             <div class="list-group list-group-flush">
                 <a class="list-group-item" href="{{ url_for("admin/balance") }}"><i class="fas fa-dollar-sign"></i> Change user balance</a>
                 <a class="list-group-item" href="{{ url_for("admin/formula") }}"><i class="fas fa-calculator"></i> Change mett formula</a>
@@ -23,10 +23,32 @@
                 <a class="list-group-item" href="{{ url_for("admin/reroute") }}"><i class="fas fa-random"></i> Switch order between users</a>
             </div>
         </div>
-        <div class="col-xl-3 col-lg-5 col-md-8 m-3">
+        <div class="col-xl-4 col-lg-5 col-md-6 mt-3">
+            <table class="table table-borderless">
+                <tr>
+                    <th scope="col">Sum of all deposits</th>
+                    <td>{{ store_stats['sum_of_deposits'] }} $</td>
+                </tr>
+                <tr>
+                    <th scope="col">Sum of all purchases</th>
+                    <td>{{ store_stats['sum_of_purchases'] }} $</td>
+                </tr>
+                <tr>
+                    <th scope="col">Virtual balance</th>
+                    <td>{{ store_stats['balance'] }} $</td>
+                </tr>
+                <tr>
+                    <th scope="col">Total number of ordered buns</th>
+                    <td>{{ store_stats['sum_of_buns'] }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row justify-content-start mt-3">
+        <div class="col-xl-4 offset-xl-5 col-lg-5 offset-lg-5 col-md-6 offset-md-5">
             {% if order_exists %}
                 <form action="{{ url_for("admin/close_order") }}" style="display:inline">
-                    <button class="btn btn-outline-secondary my-2" type="submit">
+                    <button class="btn btn-outline-secondary ml-2 my-2" type="submit">
                         <i class="fas fa-check"></i> Close order
                     </button>
                 </form>
@@ -37,7 +59,7 @@
                 </form>
             {% else %}
                 <form method=post enctype=multipart/form-data action="">
-                    <div class="input-group my-2">
+                    <div class="input-group ml-2 my-2">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
                         </div>
@@ -58,26 +80,6 @@
                     </div>
                 </form>
             {% endif %}
-        </div>
-        <div class="col-xl-3 col-lg-5 col-md-8 m-3">
-            <table class="table table-borderless">
-                <tr>
-                    <th scope="col">Sum of all deposits</th>
-                    <td>{{ store_stats['sum_of_deposits'] }} $</td>
-                </tr>
-                <tr>
-                    <th scope="col">Sum of all purchases</th>
-                    <td>{{ store_stats['sum_of_purchases'] }} $</td>
-                </tr>
-                <tr>
-                    <th scope="col">Virtual balance</th>
-                    <td>{{ store_stats['balance'] }} $</td>
-                </tr>
-                <tr>
-                    <th scope="col">Total number of ordered buns</th>
-                    <td>{{ store_stats['sum_of_buns'] }}</td>
-                </tr>
-            </table>
         </div>
     </div>
 

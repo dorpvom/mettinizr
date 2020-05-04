@@ -70,12 +70,11 @@
             <!-- flash messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                <div class="row">
-                    <div class="col-sm">
+                <div class="row justify-content-center mt-3">
+                    <div class="col-xl-6 col-lg-8 col-md-10">
                         {% for category, message in messages %}
-                            <br />
                             {% set flash_categories = ['danger', 'warning', 'primary', 'success'] %}
-                            <div class="alert alert-{{ category if category in flash_categories else 'primary' }} alert-dismissible" role="alert">
+                            <div class="alert alert-{{ category if category in flash_categories else 'primary' }} alert-dismissible mt-2" role="alert">
                                 {{ message }}
                             </div>
                         {% endfor %}
@@ -83,8 +82,6 @@
                 </div>
                 {% endif %}
             {% endwith %}
-
-            <br /><br />
 
             {% block body %}{% endblock %}
         </div>
