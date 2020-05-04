@@ -1,8 +1,8 @@
 pymongo
 mongomock
-coverage==4.0.3
-pytest<3.3.0
-pytest-cov<2.6.0
+coverage
+pytest
+pytest-cov
 coveralls[yaml]
 flask
 flask_security
@@ -11,3 +11,4 @@ bcrypt
 uwsgi
 pylint
 email_validator
+werkzeug==0.16.1
