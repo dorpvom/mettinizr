@@ -4,44 +4,40 @@
 
 {% block body %}
 
-    <div class="container">
-
-        <div class="row">
-            <div class="col col-md-2">
-                <table class="table">
-                    <thead class="thead-light">
+    <div class="row justify-content-center mt-4">
+        <div class="col col-md-2">
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">User</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Purpose</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for purchase in purchases %}
                         <tr>
-                            <th scope="col">User</th>
-                            <th scope="col">Price</th>
-                            <th scope="col">Purpose</th>
-                            <th scope="col">Action</th>
+                            <td scope="row">{{ purchase['account'] }}</td>
+                            <td>{{ purchase['price'] }}</td>
+                            <td>{{ purchase['purpose'] }}</td>
+                            <td>
+                                <form action="{{ url_for("admin/purchase/authorize/<purchase_id>", purchase_id=purchase['_id']) }}" style="display:inline">
+                                    <button class="btn btn-outline-success" type="submit">
+                                        Authorize
+                                    </button>
+                                </form>
+                                <form action="{{ url_for("admin/purchase/decline/<purchase_id>", purchase_id=purchase['_id']) }}" style="display:inline">
+                                    <button class="btn btn-outline-danger" type="submit">
+                                        Decline
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for purchase in purchases %}
-                            <tr>
-                                <td scope="row">{{ purchase['account'] }}</td>
-                                <td>{{ purchase['price'] }}</td>
-                                <td>{{ purchase['purpose'] }}</td>
-                                <td>
-                                    <form action="{{ url_for("admin/purchase/authorize/<purchase_id>", purchase_id=purchase['_id']) }}" style="display:inline">
-                                        <button class="btn btn-outline-success" type="submit">
-                                            Authorize
-                                        </button>
-                                    </form>
-                                    <form action="{{ url_for("admin/purchase/decline/<purchase_id>", purchase_id=purchase['_id']) }}" style="display:inline">
-                                        <button class="btn btn-outline-danger" type="submit">
-                                            Decline
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-
     </div>
 
 {% endblock %}

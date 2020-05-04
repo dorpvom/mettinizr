@@ -4,40 +4,38 @@
 
 {% block body %}
 
-    <div class="container-fluid">
-        {% if order_exists %}
-            <form method=post enctype=multipart/form-data action="" id="mett">
-                <div class="row justify-content-center">
-                    <div class="form-group col-xl-2 col-md-6">
-                        <label for="bun">Bun</label>
-                        <select class="form-control" id="bun" name="bun">
-                            {% for bun in bun_classes %}
-                                <option>{{ bun }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group col-xl-2 col-md-6">
-                        <label for="username">User</label>
-                        <select class="form-control" id="username" name="username">
-                            {% for user in users %}
-                                <option>{{ user }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+    {% if order_exists %}
+        <form method=post enctype=multipart/form-data action="" id="mett">
+            <div class="row justify-content-center mt-4">
+                <div class="form-group col-xl-2 col-md-6">
+                    <label for="bun">Bun</label>
+                    <select class="form-control" id="bun" name="bun">
+                        {% for bun in bun_classes %}
+                            <option>{{ bun }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <div class="row justify-content-center">
-                    <button type="submit" value=submit class="btn btn-outline-primary col-xl-3 col-md-10"><i class="fas fa-edit"></i> Assign</button>
-                </div>
-            </form>
-        {% else %}
-            <div class="row justify-content-center">
-                <div class="col-xl-6 col-lg-8 col-md-10">
-                    <div class="alert alert-warning" role="alert">
-                         No current order. You can't assign buns now.
-                    </div>
+                <div class="form-group col-xl-2 col-md-6">
+                    <label for="username">User</label>
+                    <select class="form-control" id="username" name="username">
+                        {% for user in users %}
+                            <option>{{ user }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
-        {% endif %}
-    </div>
+            <div class="row justify-content-center">
+                <button type="submit" value=submit class="btn btn-outline-primary col-xl-3 col-md-10"><i class="fas fa-edit"></i> Assign</button>
+            </div>
+        </form>
+    {% else %}
+        <div class="row justify-content-center mt-4">
+            <div class="col-xl-6 col-lg-8 col-md-10">
+                <div class="alert alert-warning" role="alert">
+                     No current order. You can't assign buns now.
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
 {% endblock %}
