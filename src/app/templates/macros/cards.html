@@ -1,0 +1,24 @@
+{% macro bun_order_card(header_text, footer_text, buns) %}
+    <div class="card">
+        <div class="card-header bg-primary text-white">{{ header_text }}</div>
+        <div class="card-body p-0">
+            <table class="table mb-0">
+                <thead class="bg-transparent">
+                    <tr>
+                        <th scope="col">Bun</th>
+                        <th scope="col">#</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bun in buns %}
+                        <tr>
+                            <td>{{ bun }}</td>
+                            <td>{{ buns[bun] | round(2) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-transparent">{{ footer_text }}</div>
+    </div>
+{% endmacro %}

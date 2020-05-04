@@ -11,7 +11,7 @@ def test_home_dashboard(mock_app, app_fixture):
     app_fixture.mett_store.create_account(MockUser.email)
 
     response = mock_app.get('/')
-    assert 'Welcome {}!'.format(MockUser.email).encode() in response.data
+    assert 'Hi {}'.format(MockUser.email).encode() in response.data
     assert b'There is no current order!' in response.data
 
 
@@ -20,7 +20,7 @@ def test_dashboard_order_exists(mock_app, app_fixture):
     app_fixture.mett_store.create_order('2099-01-01')
 
     response = mock_app.get('/')
-    assert 'Welcome {}!'.format(MockUser.email).encode() in response.data
+    assert 'Hi {}'.format(MockUser.email).encode() in response.data
     assert b'There is no current order!' not in response.data
 
 
