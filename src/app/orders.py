@@ -23,30 +23,23 @@ class OrderRoutes:
 
             try:
                 for _ in range(int(mett_order['amount'])):
-                    self._mett_store.order_bun(current_user.email, mett_order['bun_class'])
+                    self._mett_store.order_bun(current_user.name, mett_order['bun_class'])
             except ValueError:
                 flash('Please state amount of buns')
 
             return redirect(url_for(''))
 
-        order_exists = self._mett_store.active_order_exists()
-        allowed_to_order = not self._mett_store.current_order_is_expired() if order_exists else False
-        if order_exists:
-            buns = self._mett_store.get_current_bun_order()
-            mett = self._mett_store.get_current_mett_order()
-        else:
-            buns, mett = None, None
-
-        bun_classes = self._mett_store.list_bun_classes_with_price()
-
+        allowed_to_order, bun_classes, buns, mett, order_exists = self._prepare_data_for_order_page()
         return render_template('order.html', allowed_to_order=allowed_to_order, bun_classes=bun_classes, order_exists=order_exists, buns=buns, mett=mett)
 
     @roles_accepted('user', 'admin')
     def _state_purpose(self):
         if request.method == 'POST':
             transaction = _get_purchase_information(request)
-            self._mett_store.state_purchase(current_user.email, float(transaction['amount']), transaction['purpose'])
-            return render_template('order.html', bun_classes=self._mett_store.list_bun_classes())
+            self._mett_store.state_purchase(current_user.name, float(transaction['amount']), transaction['purpose'])
+
+            allowed_to_order, bun_classes, buns, mett, order_exists = self._prepare_data_for_order_page()
+            return render_template('order.html', allowed_to_order=allowed_to_order, bun_classes=self._mett_store.list_bun_classes(), order_exists=order_exists, buns=buns, mett=mett)
 
         return render_template('order/purchase.html')
 
@@ -59,6 +52,17 @@ class OrderRoutes:
             order['orders'] = rearrange_ordered_buns(order['orders'])
 
         return render_template('order/previous.html', orders=all_information)
+
+    def _prepare_data_for_order_page(self):
+        order_exists = self._mett_store.active_order_exists()
+        allowed_to_order = not self._mett_store.current_order_is_expired() if order_exists else False
+        if order_exists:
+            buns = self._mett_store.get_current_bun_order()
+            mett = self._mett_store.get_current_mett_order()
+        else:
+            buns, mett = None, None
+        bun_classes = self._mett_store.list_bun_classes_with_price()
+        return allowed_to_order, bun_classes, buns, mett, order_exists
 
 
 def rearrange_ordered_buns(orders):

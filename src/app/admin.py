@@ -58,7 +58,7 @@ class AdminRoutes:
     def _change_user_balance(self):
         if request.method == 'POST':
             transaction = _get_change_of_balance(request)
-            admin = current_user.email if not current_user.is_anonymous else 'anonymous'
+            admin = current_user.name if not current_user.is_anonymous else 'anonymous'
             self._mett_store.change_balance(account=transaction['user'], amount=transaction['amount'], admin=admin)
 
             return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
@@ -73,13 +73,13 @@ class AdminRoutes:
 
     @roles_accepted('admin')
     def _authorize_purchase(self, purchase_id):
-        admin = current_user.email if not current_user.is_anonymous else 'anonymous'
+        admin = current_user.name if not current_user.is_anonymous else 'anonymous'
         self._mett_store.authorize_purchase(purchase_id, admin)
         return self._list_purchases()
 
     @roles_accepted('admin')
     def _decline_purchase(self, purchase_id):
-        admin = current_user.email if not current_user.is_anonymous else 'anonymous'
+        admin = current_user.name if not current_user.is_anonymous else 'anonymous'
         self._mett_store.decline_purchase(purchase_id, admin)
         return self._list_purchases()
 

@@ -2,7 +2,6 @@ from flask import render_template, request, flash
 from flask_security import current_user
 
 from app.security.decorator import roles_accepted
-from app.user import user_db_session
 from database.user_store import password_is_legal
 
 
@@ -10,10 +9,9 @@ from database.user_store import password_is_legal
 
 
 class ProfileRoutes:
-    def __init__(self, app, config, user_database, database_interface):
+    def __init__(self, app, config, database_interface):
         self._app = app
         self._config = config
-        self._user_database = user_database
         self._database_interface = database_interface
 
         self._app.add_url_rule('/profile', 'profile', self._show_profile, methods=['GET', 'POST'])
@@ -23,7 +21,7 @@ class ProfileRoutes:
         if request.method == 'POST':
             self._change_own_password()
 
-        return render_template('profile/profile.html', user=current_user)
+        return render_template('profile/profile.html', user=current_user.name, roles=[role.name for role in current_user.roles])
 
     def _change_own_password(self):
         new_password = request.form['new_password']
@@ -31,11 +29,10 @@ class ProfileRoutes:
         old_password = request.form['old_password']
         if new_password != new_password_confirm:
             flash('Error: new password did not match', 'warning')
-        elif not self._database_interface.password_is_correct(current_user.email, old_password):
+        elif not self._database_interface.password_is_correct(current_user.name, old_password):
             flash('Error: wrong password', 'warning')
         elif not password_is_legal(new_password):
             flash('Error: password is not legal. Please choose another password.')
         else:
-            with user_db_session(self._user_database):
-                self._database_interface.change_password(current_user.email, new_password)
-                flash('password change successful', 'success')
+            self._database_interface.change_password(current_user.name, new_password)
+            flash('password change successful', 'success')
