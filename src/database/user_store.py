@@ -53,10 +53,10 @@ class UserRoleDatabase:
         self._user.update_one({'name': user_name}, {'$set': {'password': hash_password(password)}})
 
     def user_exists(self, user_name):
-        return self._user.find({'name': user_name}).count() == 1
+        return self._user.count_documents({'name': user_name}) == 1
 
     def role_exists(self, role):
-        return self._role.find({'name': role}).count() == 1
+        return self._role.count_documents({'name': role}) == 1
 
     def get_user(self, identifier: str) -> SecurityUser:
         if not self.user_exists(identifier):
