@@ -4,6 +4,9 @@ from passlib.context import CryptContext
 
 
 class UserRoleDatabase(SQLAlchemyUserDatastore):
+    def create_user(self, email, password):
+        super().create_user(email=email, password=hash_password(password))
+
     def list_users(self):
         user_list = self.user_model.query.all()
         return user_list
