@@ -13,12 +13,11 @@ from database.user_store import UserRoleDatabase, password_is_legal
 
 
 class UserRoutes:
-    def __init__(self, app, config, mett_store, user_database, user_interface: UserRoleDatabase):
+    def __init__(self, app, config, mett_store, user_interface: UserRoleDatabase):
         self._app = app
         self._config = config
         self._mett_store = mett_store
         self._user_interface = user_interface
-        self._user_database = user_database
 
         self._app.add_url_rule('/user', 'user', self._show_user_home, methods=['GET', 'POST'])
         self._app.add_url_rule('/user/delete/<name>', 'user/delete/<name>', self._delete_user, methods=['GET'])
@@ -43,17 +42,16 @@ class UserRoutes:
             flash(str(error), 'danger')
             users = list()
 
-        return render_template('user.html', users=users, existing_roles=[role.name for role in self._user_interface.list_roles()])
+        return render_template('user.html', users=users, existing_roles=[role['name'] for role in self._user_interface.list_roles()])
 
     @roles_accepted('admin')
     def _delete_user(self, name):
         try:
-            admin = current_user.email if not current_user.is_anonymous else 'anonymous'
+            admin = current_user.name if not current_user.is_anonymous else 'anonymous'
             balance = self._mett_store.get_account_information(name)['balance']
             self._mett_store.change_balance(name, -balance, admin)
             self._mett_store.delete_account(name)
-            with user_db_session(self._user_database):
-                self._user_interface.delete_user(user=self._user_interface.find_user(email=name))
+            self._user_interface.delete_user(name)
         except StorageException as error:
             flash(str(error), 'warning')
         except RuntimeError:
@@ -63,10 +61,9 @@ class UserRoutes:
     def _generate_user_information(self):
         for user in self._user_interface.list_users():
             information = {
-                'name': user.email,
-                'active': user.is_active,
-                'roles': self._extract_roles(user.roles),
-                'balance': self._mett_store.get_account_information(user.email)['balance']
+                'name': user['name'],
+                'roles': user['roles'],
+                'balance': self._mett_store.get_account_information(user['name'])['balance']
             }
             yield information
 
@@ -79,9 +76,8 @@ class UserRoutes:
             if not password_is_legal(request.form['new_password']):
                 raise ValueError('Please choose legal password')
 
-            with user_db_session(self._user_database):
-                self._user_interface.create_user(email=request.form['new_user'], password=request.form['new_password'])
-                self._user_interface.add_role_to_user(user=self._user_interface.find_user(email=request.form['new_user']), role=self._config.get('User', 'default_role'))
+            self._user_interface.create_user(name=request.form['new_user'], password=request.form['new_password'])
+            self._user_interface.add_role_to_user(user=request.form['new_user'], role=self._config.get('User', 'default_role'))
 
             self._mett_store.create_account(request.form['new_user'])
 
@@ -91,12 +87,10 @@ class UserRoutes:
             flash('Can\'t create user {}. Might already exist. Otherwise check for bad spelling.'.format(request.form['new_user']), 'warning')
 
     def _handle_added_role(self):
-        with user_db_session(self._user_database):
-            self._user_interface.add_role_to_user(user=self._user_interface.find_user(email=request.form['add_role_username']), role=request.form['added_role'])
+        self._user_interface.add_role_to_user(user=request.form['add_role_username'], role=request.form['added_role'])
 
     def _handle_removed_role(self):
-        with user_db_session(self._user_database):
-            self._user_interface.remove_role_from_user(user=self._user_interface.find_user(email=request.form['remove_role_username']), role=request.form['removed_role'])
+        self._user_interface.remove_role_from_user(user=request.form['remove_role_username'], role=request.form['removed_role'])
 
     def _handle_password_change(self):
         new_password = request.form['new_password']
@@ -107,9 +101,8 @@ class UserRoutes:
         elif not password_is_legal(new_password):
             flash('Error: password is not legal. Please choose another password.')
         else:
-            with user_db_session(self._user_database):
-                self._user_interface.change_password(request.form['name'], new_password)
-                flash('password change successful', 'success')
+            self._user_interface.change_password(request.form['name'], new_password)
+            flash('password change successful', 'success')
 
 
 @contextmanager

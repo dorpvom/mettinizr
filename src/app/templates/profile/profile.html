@@ -7,7 +7,7 @@
 <div class="row justify-content-center mt-4">
     <div class="col-xl-6 col-lg-8 col-md-10">
         <h3>
-            Profile of {{ user.email }}
+            Profile of {{ user }}
         </h3>
     </div>
 </div>
@@ -18,11 +18,11 @@
             <tbody>
                 <tr>
                     <td>Username</td>
-                    <td>{{ user.email }}</td>
+                    <td>{{ user }}</td>
                 </tr>
                 <tr>
-                    <td>Active</td>
-                    <td>{{ user.active }}</td>
+                    <td>Roles</td>
+                    <td>{{ roles | sort | join(', ') }}</td>
                 </tr>
             </tbody>
         </table>

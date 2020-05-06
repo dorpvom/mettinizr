@@ -18,7 +18,7 @@ class DashboardRoutes:
     @login_required
     @roles_accepted('user', 'admin')
     def _show_home_dashboard(self):
-        user = current_user.email
+        user = current_user.name
         information = self._mett_store.get_account_information(user)
         order_exists, order = True, {}
         try:

@@ -23,10 +23,6 @@ class Filter:
 
     @staticmethod
     def _unix_time_to_string(unix_time_stamp):
-        '''
-        input unix_time_stamp
-        output string 'YYYY-MM-DD HH:MM:SS'
-        '''
         if isinstance(unix_time_stamp, (float, int)):
             tmp = localtime(unix_time_stamp)
             return strftime('%Y-%m-%d %H:%M:%S', tmp)
@@ -35,6 +31,7 @@ class Filter:
     def _init_filter(self):
         self._app.jinja_env.filters['string_list'] = lambda string_list: ', '.join([str(string) for string in string_list])
         self._app.jinja_env.filters['time_string'] = self._unix_time_to_string
+        self._app.jinja_env.filters['user_has_role'] = lambda user, role: role in [role.name for role in user.roles]
 
 
 class ReverseProxied:
@@ -71,15 +68,15 @@ class AppSetup:
         self.app = Flask(__name__)
         self.app.secret_key = os.urandom(24)
 
-        self.user_database, self.user_interface = add_flask_security_to_app(self.app, self.config)
+        self.user_interface = add_flask_security_to_app(self.app, self.config)
 
         self.mett_store = MettStore(config=self.config)
 
         OrderRoutes(self.app, self.config, self.mett_store)
         DashboardRoutes(self.app, self.config, self.mett_store)
         AdminRoutes(self.app, self.config, self.mett_store)
-        ProfileRoutes(self.app, self.config, self.user_database, self.user_interface)
-        UserRoutes(self.app, self.config, self.mett_store, self.user_database, self.user_interface)
+        ProfileRoutes(self.app, self.config, self.user_interface)
+        UserRoutes(self.app, self.config, self.mett_store, self.user_interface)
         Filter(self.app, self.config)
 
         if self.config.getboolean('Runtime', 'behind_proxy'):

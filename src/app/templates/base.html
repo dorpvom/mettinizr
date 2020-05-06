@@ -34,7 +34,7 @@
                     <li class="nav-item">
                         <a class="nav-link {% if active_page == 'Order' %} active {% endif %}" href="{{ url_for("order") }}">Order</a>
                     </li>
-                    {% if current_user.has_role('admin') %}
+                    {% if current_user | user_has_role('admin') %}
                         <li class="nav-item">
                             <a class="nav-link {% if active_page == 'Admin' %} active {% endif %}" href="{{ url_for("admin") }}">Admin</a>
                         </li>
@@ -45,7 +45,7 @@
                     {% if current_user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {{ current_user.email }}
+                                {{ current_user.name }}
                             </a>
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                 <a class="dropdown-item" href="{{ url_for("profile") }}">Profile</a>

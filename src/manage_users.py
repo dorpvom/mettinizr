@@ -41,19 +41,13 @@ class Actions:
         )
 
     @staticmethod
-    def _user_exists(app, interface, name):
-        with app.app_context():
-            user = interface.find_user(email=name)
-        return bool(user)
+    def _user_exists(user_store, mett_store, name):
+        return user_store.user_exists(name) or mett_store.account_exists(name)
 
     @staticmethod
-    def exit(*_):
-        raise EOFError('Quitting ..')
-
-    @staticmethod
-    def create_user(app, interface, database, mett_store):
+    def create_user(interface, mett_store, app):
         user = get_input('username: ')
-        if Actions._user_exists(app, interface, user):
+        if Actions._user_exists(interface, mett_store, user):
             raise DatabaseError('user must not exist')
 
         password = getpass.getpass('password: ')
@@ -64,67 +58,57 @@ class Actions:
             mett_store.create_account(user)
 
         with app.app_context():
-            interface.create_user(email=user, password=password)
-            database.session.commit()
+            interface.create_user(name=user, password=password)
 
     @staticmethod
-    def _role_exists(app, interface, role):
-        with app.app_context():
-            exists = interface.find_role(role)
-        return bool(exists)
-
-    @staticmethod
-    def create_role(app, interface, database, _):
+    def create_role(interface, *_):
         role = get_input('role name: ')
-        if Actions._role_exists(app, interface, role):
+        if interface.role_exists(role):
             raise DatabaseError('role must not exist')
-        with app.app_context():
-            interface.create_role(name=role)
-            database.session.commit()
+
+        interface.create_role(name=role)
 
     @staticmethod
-    def add_role_to_user(app, interface, database, _):
+    def add_role_to_user(interface, mett_store, _):
         user = get_input('username: ')
-        if not Actions._user_exists(app, interface, user):
+        if not Actions._user_exists(interface, mett_store, user):
             raise DatabaseError('user must exists before adding it to role')
 
         role = get_input('role name: ')
-        if not Actions._role_exists(app, interface, role):
+        if not interface.role_exists(role):
             raise DatabaseError('role must exists before user can be added')
 
-        with app.app_context():
-            interface.add_role_to_user(user=interface.find_user(email=user), role=role)
-            database.session.commit()
+        interface.add_role_to_user(user=user, role=role)
 
     @staticmethod
-    def remove_role_from_user(app, interface, database, _):
+    def remove_role_from_user(interface, mett_store, _):
         user = get_input('username: ')
-        if not Actions._user_exists(app, interface, user):
+        if not Actions._user_exists(interface, mett_store, user):
             raise DatabaseError('user must exists before removing role from it')
 
         role = get_input('role name: ')
-        if not Actions._role_exists(app, interface, role):
+        if not interface.role_exists(role):
             raise DatabaseError('role must exists before removing it from user')
 
-        with app.app_context():
-            interface.remove_role_from_user(user=interface.find_user(email=user), role=role)
-            database.session.commit()
+        interface.remove_role_from_user(user=user, role=role)
 
     @staticmethod
-    def delete_user(app, interface, database, _):
+    def delete_user(interface, mett_store, _):
         user = get_input('username: ')
-        if not Actions._user_exists(app, interface, user):
+        if not Actions._user_exists(interface, mett_store, user):
             raise DatabaseError('user must exists before deleting it')
 
-        with app.app_context():
-            interface.delete_user(user=interface.find_user(email=user))
-            database.session.commit()
+        interface.delete_user(user=user)
+
+    @staticmethod
+    def exit(*_):
+        raise EOFError('Quitting ..')
 
 
 LEGAL_ACTIONS = [action for action in dir(Actions) if not action.startswith('_')]
 
 
-def prompt_for_actions(app, store, database, mett_store):
+def prompt_for_actions(app_setup):
     print(r'''                             _   _   _       _
               _ __ ___   ___| |_| |_(_)_ __ (_)_____ __
              | '_ ` _ \ / _ \ __| __| | '_ \| |_  / '__|
@@ -143,22 +127,15 @@ def prompt_for_actions(app, store, database, mett_store):
         else:
             try:
                 acting_function = getattr(Actions, action)
-                acting_function(app, store, database, mett_store)
+                acting_function(app_setup.user_interface, app_setup.mett_store, app_setup.app)
             except (DatabaseError, ValueError) as error:
                 print('error: {}'.format(error))
             except EOFError:
                 break
 
     print('\nQuitting ..')
-
-
-def start_user_management(app_setup):
-    app_setup.user_database.create_all()
-
-    prompt_for_actions(app_setup.app, app_setup.user_interface, app_setup.user_database, app_setup.mett_store)
-
     return 0
 
 
 if __name__ == '__main__':
-    sys.exit(start_user_management(AppSetup()))
+    sys.exit(prompt_for_actions(AppSetup()))

@@ -21,7 +21,7 @@
                         <tr>
                             <td>{{ user['name'] }}</td>
                             <td>{{ user['balance'] | round(2) }}</td>
-                            <td>{{ user['roles'] }}</td>
+                            <td>{{ user['roles'] | sort | join(', ') }}</td>
                             <td>
                                 <div class="btn-group" role="group" aria-label="role management">
                                     <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#add_user_role_{{ user['name'] }}"><i class="fas fa-plus"></i></button>
