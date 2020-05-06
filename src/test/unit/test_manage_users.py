@@ -34,7 +34,10 @@ def test_create_user_exists(app_fixture, monkeypatch, capsys):
     monkeypatch.setattr('sys.stdin', io.StringIO('create_user\ntest\n\0'))
     monkeypatch.setattr('manage_users.getpass.getpass', lambda *_: 'test')  # stdin mocking does not seem to work here ..
 
-    app_fixture.user_interface.create_user(email='test', password='test')
+    with app_fixture.app.app_context():
+        app_fixture.user_interface.create_user(email='test', password='test')
+        app_fixture.user_database.session.commit()
+
     prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
     out, _ = capsys.readouterr()
     assert 'user must not exist' in out
@@ -77,7 +80,9 @@ def test_create_role_exists(app_fixture, monkeypatch, capsys):
 
 def test_add_role_to_user(app_fixture, monkeypatch):
     monkeypatch.setattr('sys.stdin', io.StringIO('add_role_to_user\ntest\ntest\n\0'))
-    app_fixture.user_interface.create_user(email='test', password='test')
+    with app_fixture.app.app_context():
+        app_fixture.user_interface.create_user(email='test', password='test')
+        app_fixture.user_database.session.commit()
     app_fixture.user_interface.create_role(name='test')
     app_fixture.user_database.session.commit()
 
@@ -97,8 +102,9 @@ def test_add_role_no_user(app_fixture, monkeypatch, capsys):
 
 def test_add_role_no_role(app_fixture, monkeypatch, capsys):
     monkeypatch.setattr('sys.stdin', io.StringIO('add_role_to_user\ntest\ntest\n\0'))
-    app_fixture.user_interface.create_user(email='test', password='test')
-    app_fixture.user_database.session.commit()
+    with app_fixture.app.app_context():
+        app_fixture.user_interface.create_user(email='test', password='test')
+        app_fixture.user_database.session.commit()
 
     prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
     out, _ = capsys.readouterr()
@@ -107,7 +113,9 @@ def test_add_role_no_role(app_fixture, monkeypatch, capsys):
 
 def test_remove_role_from_user(app_fixture, monkeypatch):
     monkeypatch.setattr('sys.stdin', io.StringIO('remove_role_from_user\ntest\ntest\n\0'))
-    app_fixture.user_interface.create_user(email='test', password='test')
+    with app_fixture.app.app_context():
+        app_fixture.user_interface.create_user(email='test', password='test')
+        app_fixture.user_database.session.commit()
     app_fixture.user_interface.create_role(name='test')
     app_fixture.user_interface.add_role_to_user(user=app_fixture.user_interface.find_user(email='test'), role='test')
     app_fixture.user_database.session.commit()
@@ -128,8 +136,9 @@ def test_remove_role_no_user(app_fixture, monkeypatch, capsys):
 
 def test_remove_role_no_role(app_fixture, monkeypatch, capsys):
     monkeypatch.setattr('sys.stdin', io.StringIO('remove_role_from_user\ntest\ntest\n\0'))
-    app_fixture.user_interface.create_user(email='test', password='test')
-    app_fixture.user_database.session.commit()
+    with app_fixture.app.app_context():
+        app_fixture.user_interface.create_user(email='test', password='test')
+        app_fixture.user_database.session.commit()
 
     prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
     out, _ = capsys.readouterr()
@@ -138,8 +147,9 @@ def test_remove_role_no_role(app_fixture, monkeypatch, capsys):
 
 def test_delete_user(app_fixture, monkeypatch):
     monkeypatch.setattr('sys.stdin', io.StringIO('delete_user\ntest\n\0'))
-    app_fixture.user_interface.create_user(email='test', password='test')
-    app_fixture.user_database.session.commit()
+    with app_fixture.app.app_context():
+        app_fixture.user_interface.create_user(email='test', password='test')
+        app_fixture.user_database.session.commit()
 
     prompt_for_actions(app_fixture.app, app_fixture.user_interface, app_fixture.user_database, app_fixture.mett_store)
     assert not app_fixture.user_interface.find_user(email='test')

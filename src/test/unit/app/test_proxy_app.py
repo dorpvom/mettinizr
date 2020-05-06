@@ -22,8 +22,9 @@ def app_fixture(tmpdir, monkeypatch):
 def mock_app(app_fixture):  # pylint: disable=redefined-outer-name
     app_fixture.user_database.create_all()
 
-    with simple_session(app_fixture.user_database):
-        app_fixture.user_interface.create_user(email=MockUser.email, password=MockUser.password)
+    with app_fixture.app.app_context():
+        with simple_session(app_fixture.user_database):
+            app_fixture.user_interface.create_user(email=MockUser.email, password=MockUser.password)
 
     app_fixture.mett_store.create_account(MockUser.email)
 
