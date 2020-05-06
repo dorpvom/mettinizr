@@ -108,14 +108,14 @@ class UserRoleDatabase:
     def find_or_create_role(self, name, **kwargs):
         raise NotImplementedError()
 
-    def create_user(self, name: str, password: str, roles: List[str]=None):
+    def create_user(self, name: str, password: str, roles: List[str] = None, is_hashed: bool = False):
         if self.user_exists(name):
             raise StorageException('User already exists')
-        if not password_is_legal(password):
+        if not is_hashed and not password_is_legal(password):
             raise StorageException('Illegal password. Ask admin for password rules.')
         if roles and not all(self.role_exists(role) for role in roles):
             raise StorageException('Not all roles in {} exist'.format(roles))
-        self._user.insert_one({'name': name, 'password': hash_password(password), 'roles': roles if roles else []})
+        self._user.insert_one({'name': name, 'password': password if is_hashed else hash_password(password), 'roles': roles if roles else []})
 
     def delete_user(self, user: str):
         if not self.user_exists(user):
