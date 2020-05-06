@@ -9,6 +9,7 @@ from test.unit.common import config_for_tests
 @pytest.fixture(scope='function')
 def app_fixture(monkeypatch, tmpdir):
     monkeypatch.setattr('database.mett_store.MongoClient', MongoClient)
+    monkeypatch.setattr('database.user_store.MongoClient', MongoClient)
     return AppSetup(config_for_tests(tmpdir))
 
 
@@ -16,9 +17,9 @@ def test_create_init_user(app_fixture):
     create_init_user(app_fixture)
 
     assert app_fixture.mett_store.account_exists('init')
-    assert app_fixture.user_interface.find_role('admin')
-    assert app_fixture.user_interface.find_role('user')
+    assert app_fixture.user_interface.role_exists('admin')
+    assert app_fixture.user_interface.role_exists('user')
 
-    user = app_fixture.user_interface.find_user(email='init')
+    user = app_fixture.user_interface.find_user('init')
     assert user
     assert len(user.roles) == 1
