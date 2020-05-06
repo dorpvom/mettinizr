@@ -3,6 +3,8 @@ import sys
 from collections import namedtuple
 from pathlib import Path
 
+from bson import ObjectId
+
 from app.app_setup import AppSetup
 from database.mett_store import MettStore
 
@@ -15,10 +17,11 @@ def filter_roles(user, roles):
     ]
 
 
-def replace_object_ids(iterable):
-    for entry in iterable:
-        entry['_id'] = str(entry['_id'])
-        yield entry
+class MongoEncoder(json.JSONEncoder):
+    def default(self, obj: ObjectId):
+        if isinstance(obj, ObjectId):
+            return obj.__repr__()
+        return json.JSONEncoder.default(self, obj)
 
 
 def backup(app, user_store, mett_store: MettStore):
@@ -35,11 +38,11 @@ def backup(app, user_store, mett_store: MettStore):
                 ]
             ]
 
-    accounts = list(replace_object_ids(mett_store._account.find())) if getattr(mett_store, '_account', None) else []
-    orders = list(replace_object_ids(mett_store._order.find())) if getattr(mett_store, '_order', None) else []
-    buns = list(replace_object_ids(mett_store._buns.find())) if getattr(mett_store, '_buns', None) else []
-    purchases = list(replace_object_ids(mett_store._purchase.find())) if getattr(mett_store, '_purchase', None) else []
-    deposits = list(replace_object_ids(mett_store._deposit.find())) if getattr(mett_store, '_deposit', None) else []
+    accounts = list(mett_store._account.find()) if getattr(mett_store, '_account', None) else []
+    orders = list(mett_store._order.find()) if getattr(mett_store, '_order', None) else []
+    buns = list(mett_store._buns.find()) if getattr(mett_store, '_buns', None) else []
+    purchases = list(mett_store._purchase.find()) if getattr(mett_store, '_purchase', None) else []
+    deposits = list(mett_store._deposit.find()) if getattr(mett_store, '_deposit', None) else []
 
     backup_data = {
         'auth': {
@@ -55,7 +58,7 @@ def backup(app, user_store, mett_store: MettStore):
         }
     }
 
-    backup_json = json.dumps(backup_data)
+    backup_json = json.dumps(backup_data, cls=MongoEncoder)
     Path('mett.backup.json').write_text(backup_json)
 
 
