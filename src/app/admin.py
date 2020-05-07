@@ -68,8 +68,12 @@ class AdminRoutes:
 
     @roles_accepted('admin')
     def _list_purchases(self):
-        purchases = self._mett_store.list_purchases()
-        return render_template('admin/purchase.html', purchases=purchases)
+        purchases = self._mett_store.list_purchases(processed=True)
+
+        processed = [purchase for purchase in purchases if purchase['processed']['by']]
+        unprocessed = [purchase for purchase in purchases if not purchase['processed']['by']]
+
+        return render_template('admin/purchase.html', processed=processed, unprocessed=unprocessed)
 
     @roles_accepted('admin')
     def _authorize_purchase(self, purchase_id):

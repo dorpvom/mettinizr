@@ -87,7 +87,7 @@ class MettStore:
     def list_purchases(self, processed=False):
         # list purchases, if processed is false only those that have not been authorized or declined
         query = {} if processed else {'processed.authorized': False}
-        purchases = list(self._purchase.find(query, {'account': 1, 'price': 1, '_id': 1, 'purpose': 1}))
+        purchases = list(self._purchase.find(query, {'account': 1, 'price': 1, '_id': 1, 'purpose': 1, 'processed': 1}))
         for purchase in purchases:
             purchase['_id'] = str(purchase['_id'])
         return purchases
@@ -95,12 +95,17 @@ class MettStore:
     def authorize_purchase(self, purchase_id, admin):
         # add purchase.amount to purchase.account.balance
         purchase = self._purchase.find_one({'_id': ObjectId(purchase_id)})
+        if purchase['processed']['by']:
+            raise StorageException('Purchase was already processed')
         self._book_money(purchase['account'], float(purchase['price']))
         self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': {'authorized': True, 'at': time(), 'by': admin}}})
 
     def decline_purchase(self, purchase_id, admin):
         # drop purchase
-        self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': {'authorized': True, 'at': time(), 'by': admin}}})
+        purchase = self._purchase.find_one({'_id': ObjectId(purchase_id)})
+        if purchase['processed']['by']:
+            raise StorageException('Purchase was already processed')
+        self._purchase.update_one({'_id': ObjectId(purchase_id)}, {'$set': {'processed': {'authorized': False, 'at': time(), 'by': admin}}})
 
     def change_mett_formula(self, bun, amount):
         # set mett_formula.amount for referenced bun
