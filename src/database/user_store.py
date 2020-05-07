@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from flask_login import UserMixin
 from flask_security.utils import verify_password, hash_password
@@ -42,7 +42,7 @@ class UserRoleDatabase:
         return list(self._role.find())
 
     def password_is_correct(self, user_name, password):
-        stored_password = self.get_user(user_name).password
+        stored_password = self.get_user(user_name, throw=True).password
         return verify_password(password, stored_password)
 
     def change_password(self, user_name, password):
@@ -58,9 +58,12 @@ class UserRoleDatabase:
     def role_exists(self, role):
         return self._role.count_documents({'name': role}) == 1
 
-    def get_user(self, identifier: str) -> SecurityUser:
+    def get_user(self, identifier: str, throw: bool = False) -> Union[SecurityUser, None]:
         if not self.user_exists(identifier):
-            raise StorageException('User does not exist')
+            if throw:
+                raise StorageException('User does not exist')
+            else:
+                return None
 
         user = self._user.find_one({'name': identifier})
         return SecurityUser(name=user['name'], password=user['password'], roles=user['roles'])
