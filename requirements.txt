@@ -5,7 +5,7 @@ pytest
 pytest-cov
 coveralls[yaml]
 flask
-flask_security
+Flask-Security-Too
 flask_sqlalchemy
 bcrypt
 uwsgi
