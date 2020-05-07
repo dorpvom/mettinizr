@@ -120,7 +120,8 @@ def test_decline_purchase(mock_app, app_fixture):
     response = mock_app.get('/admin/purchase/decline/{}'.format(purchase_id))
     assert response.status_code == 200
     assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 0.0
-    assert b'testing purpose' not in mock_app.get('/admin/purchase').data
+    assert b'table-danger' in mock_app.get('/admin/purchase').data
+    assert b'table-success' not in mock_app.get('/admin/purchase').data
 
 
 def test_authorize_purchase(mock_app, app_fixture):
@@ -131,4 +132,5 @@ def test_authorize_purchase(mock_app, app_fixture):
     response = mock_app.get('/admin/purchase/authorize/{}'.format(purchase_id))
     assert response.status_code == 200
     assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 1.23
-    assert b'testing purpose' not in mock_app.get('/admin/purchase').data
+    assert b'table-success' in mock_app.get('/admin/purchase').data
+    assert b'table-danger' not in mock_app.get('/admin/purchase').data

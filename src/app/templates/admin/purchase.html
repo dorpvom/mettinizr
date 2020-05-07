@@ -5,38 +5,76 @@
 {% block body %}
 
     <div class="row justify-content-center mt-4">
-        <div class="col col-md-2">
-            <table class="table">
-                <thead class="thead-light">
-                    <tr>
-                        <th scope="col">User</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">Purpose</th>
-                        <th scope="col">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for purchase in purchases %}
-                        <tr>
-                            <td scope="row">{{ purchase['account'] }}</td>
-                            <td>{{ purchase['price'] }}</td>
-                            <td>{{ purchase['purpose'] }}</td>
-                            <td>
-                                <form action="{{ url_for("admin/purchase/authorize/<purchase_id>", purchase_id=purchase['_id']) }}" style="display:inline">
-                                    <button class="btn btn-outline-success" type="submit">
-                                        Authorize
-                                    </button>
-                                </form>
-                                <form action="{{ url_for("admin/purchase/decline/<purchase_id>", purchase_id=purchase['_id']) }}" style="display:inline">
-                                    <button class="btn btn-outline-danger" type="submit">
-                                        Decline
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-xl-6 col-lg-8 col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">Unprocessed purchases</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <thead class="bg-transparent">
+                            <tr>
+                                <th scope="col">User</th>
+                                <th scope="col">Price</th>
+                                <th scope="col">Purpose</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase in unprocessed %}
+                                <tr>
+                                    <td class="align-middle">{{ purchase['account'] }}</td>
+                                    <td class="align-middle">{{ purchase['price'] }}</td>
+                                    <td class="align-middle">{{ purchase['purpose'] }}</td>
+                                    <td>
+                                        <form action="{{ url_for("admin/purchase/authorize/<purchase_id>", purchase_id=purchase['_id']) }}" style="display:inline">
+                                            <button class="btn btn-outline-success" type="submit">
+                                                Authorize
+                                            </button>
+                                        </form>
+                                        <form action="{{ url_for("admin/purchase/decline/<purchase_id>", purchase_id=purchase['_id']) }}" style="display:inline">
+                                            <button class="btn btn-outline-danger" type="submit">
+                                                Decline
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-xl-6 col-lg-8 col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">Processed purchases</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <thead class="bg-transparent">
+                            <tr>
+                                <th scope="col">User</th>
+                                <th scope="col">Price</th>
+                                <th scope="col">Purpose</th>
+                                <th scope="col">Processed at</th>
+                                <th scope="col">Processed by</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase in processed %}
+                                {% set table_class = 'table-success' if purchase['processed']['authorized'] else 'table-danger' %}
+                                <tr class="{{ table_class }}">
+                                    <td>{{ purchase['account'] }}</td>
+                                    <td>{{ purchase['price'] }}</td>
+                                    <td>{{ purchase['purpose'] }}</td>
+                                    <td>{{ purchase['processed']['at'] | time_string}}</td>
+                                    <td>{{ purchase['processed']['by'] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
