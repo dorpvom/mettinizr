@@ -5,9 +5,9 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install libpython3-dev
 install:
-  - pip install -r requirements.txt
+  - pip3 install -r requirements.txt
   - ./dependencies.sh
 script:
-  - pytest --cov 
+  - py.test --cov 
 after_success:
   - coveralls
