@@ -1,0 +1,9 @@
+pytest
+flask
+flask_security
+flask_sqlalchemy
+bcrypt
+uwsgi
+pylint
+email_validator
+werkzeug
