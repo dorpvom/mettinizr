@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Boolean, Column, Date, Float, ForeignKey, Integer, Table
+    Boolean, Column, Date, Float, ForeignKey, Integer, Table, PrimaryKeyConstraint
 )
 from sqlalchemy.dialects.sqlite import VARCHAR
 from sqlalchemy.orm import backref, declarative_base, relationship
@@ -54,6 +54,7 @@ class BunClassEntry(Base):
 class SingleOrderEntry(Base):
     __tablename__ = 'single_order'
 
+    _id = Column(Integer, primary_key=True)
     account = Column(VARCHAR, ForeignKey('user.name'))
     bun = Column(VARCHAR, ForeignKey('bun_class.name'))
 
@@ -89,7 +90,7 @@ class PurchaseAuthorizationEntry(Base):
     _id = Column(Integer, primary_key=True)
     authorized = Column(Boolean)
     at = Column(Date)
-    by = Column(UserEntry)
+    by = Column(VARCHAR, ForeignKey('user.name'))
 
 
 class PurchaseEntry(Base):
@@ -106,6 +107,7 @@ class PurchaseEntry(Base):
 class DepositEntry(Base):
     __tablename__ = 'deposit'
 
+    _id = Column(Integer, primary_key=True)
     admin = Column(VARCHAR, ForeignKey('user.name'))
     user = Column(VARCHAR, ForeignKey('user.name'))
     amount = Column(Float, nullable=False)

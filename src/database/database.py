@@ -14,12 +14,12 @@ class DatabaseError(Exception):
 
 
 class SQLDatabase:
-    def __init__(self, config: ConfigParser, database_path: Optional[str] = None, **kwargs):
+    def __init__(self, config: ConfigParser, database_path: Optional[str] = None):
         self.base = Base
         self.config = config
-        database_path = database_path if database_path else config.get('data_storage', 'database_path')
-        engine_url = f'postgresql://{database_path}'
-        self.engine = create_engine(engine_url, pool_size=100, future=True, **kwargs)
+        database_path = database_path if database_path else config.get('Database', 'database_path')
+        engine_url = f'sqlite:///{database_path}'
+        self.engine = create_engine(engine_url, future=True)
         self._session_maker = sessionmaker(bind=self.engine, future=True)  # future=True => sqlalchemy 2.0 support
         self.ro_session = None
 
