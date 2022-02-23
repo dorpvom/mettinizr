@@ -57,11 +57,7 @@ class SingleOrderEntry(Base):
     _id = Column(Integer, primary_key=True)
     account = Column(VARCHAR, ForeignKey('user.name'))
     bun = Column(VARCHAR, ForeignKey('bun_class.name'))
-
-    order = relationship(
-        'OrderEntry',
-        back_populates='buns'
-    )
+    order = Column(Integer, ForeignKey('order._id'))
 
     def __repr__(self) -> str:
         return f'SingleOrder({self.account}, {self.bun})'
@@ -76,7 +72,7 @@ class OrderEntry(Base):
 
     buns = relationship(
         'SingleOrderEntry',
-        back_populates='order',
+        # back_populates='order',
         cascade='all, delete-orphan'
     )
 
