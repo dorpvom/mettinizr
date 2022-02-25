@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, Session
 
-from database.objects import Base
+from database.database_objects import Base
 
 
 class DatabaseError(Exception):

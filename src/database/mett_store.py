@@ -124,9 +124,6 @@ class MettStore:
 
     # -------------- user functions --------------
 
-    def active_order_exists(self):
-        return self._order.count_documents({'processed': False}) > 0
-
     def account_exists(self, name):
         return self._account.count_documents({'name': name}) > 0
 
@@ -240,30 +237,9 @@ class MettStore:
     def _get_mett(self, bun):
         return float(self._buns.find_one({'bun_class': bun}, {'mett': 1})['mett'])
 
-    def _get_current_order(self):
-        current_order = self._order.find_one({'processed': False})
-        if not current_order:
-            raise StorageException('No current order')
-        return current_order
-
     def _charge_bun(self, account, bun):
         bun_price = self._buns.find_one({'bun_class': bun})['price']
         self._account.update_one({'name': account}, {'$inc': {'balance': 0 - float(bun_price)}})
 
     # -------------- internal functions --------------
 
-    def create_order(self, expiry_date):
-        if self._is_expired(expiry_date):
-            raise StorageException('Please enter date that hasn\'t expired yet')
-        if self.active_order_exists():
-            raise StorageException('No new order can be initialized while another one is active')
-        return self._order.insert_one({'expiry_date': expiry_date, 'processed': False, 'orders': []}).inserted_id
-
-    def current_order_is_expired(self):
-        if not self.active_order_exists():
-            raise StorageException('There is no active order')
-        return self._is_expired(self._get_current_order()['expiry_date'])
-
-    def _is_expired(self, expiry_date):
-        expiry_time = self._config.get('DEFAULT', 'expiry_time').strip()
-        return datetime.datetime.strptime('{} {}'.format(expiry_date, expiry_time), '%Y-%m-%d %H:%M:%S') < datetime.datetime.now()

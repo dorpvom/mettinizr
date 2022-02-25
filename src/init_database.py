@@ -2,6 +2,7 @@ from pathlib import Path
 from configparser import ConfigParser
 
 from app.app_setup import AppSetup
+from database.database import DatabaseError
 from database.interface import MettInterface
 from time import time
 
@@ -43,7 +44,16 @@ def init_database():
                 config.getfloat('Mett', 'default_grams')
             )
 
-    # interface.create_order(expiry_date=time() + 60.0 * 60.0 * 24.0 * 7.0)
+    try:
+        interface.create_order(expiry_date='2022-02-10')
+    except DatabaseError:
+        print('Correctly failed to enter expired order')
+
+    print(interface.active_order_exists())
+    interface.create_order(expiry_date='2023-02-10')
+    print(interface.active_order_exists())
+    print(interface.current_order_is_expired())
+
     exit(0)
 
 
