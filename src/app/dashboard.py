@@ -4,7 +4,7 @@ from flask import render_template
 from flask_security import current_user, login_required
 
 from app.security.decorator import roles_accepted
-from database.mett_store import StorageException
+from database.interface import DatabaseError
 
 
 class DashboardRoutes:
@@ -23,7 +23,7 @@ class DashboardRoutes:
         order_exists, order = True, {}
         try:
             order = self._mett_store.get_current_user_buns(user)
-        except StorageException:
+        except DatabaseError:
             order_exists = False
 
         order_history, mean_buns = self._mett_store.get_order_history(user)

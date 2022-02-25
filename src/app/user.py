@@ -6,14 +6,13 @@ from flask_security import current_user
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.security.decorator import roles_accepted
-from database.mett_store import StorageException
-from database.user_store import UserRoleDatabase, password_is_legal
+from database.interface import DatabaseError, password_is_legal, MettInterface
 
 # pylint: disable=redefined-outer-name
 
 
 class UserRoutes:
-    def __init__(self, app, config, mett_store, user_interface: UserRoleDatabase):
+    def __init__(self, app, config, mett_store, user_interface: MettInterface):
         self._app = app
         self._config = config
         self._mett_store = mett_store
@@ -38,9 +37,9 @@ class UserRoutes:
 
         try:
             users = list(self._generate_user_information())
-        except StorageException as error:
+        except DatabaseError as error:
             flash(str(error), 'danger')
-            users = list()
+            users = []
 
         return render_template('user.html', users=users, existing_roles=[role['name'] for role in self._user_interface.list_roles()])
 
@@ -52,7 +51,7 @@ class UserRoutes:
             self._mett_store.change_balance(name, -balance, admin)
             self._mett_store.delete_account(name)
             self._user_interface.delete_user(name)
-        except StorageException as error:
+        except DatabaseError as error:
             flash(str(error), 'warning')
         except RuntimeError:
             flash('Failed to delete user account', 'warning')
@@ -81,7 +80,7 @@ class UserRoutes:
 
             self._mett_store.create_account(request.form['new_user'])
 
-        except (StorageException, ValueError) as error:
+        except (DatabaseError, ValueError) as error:
             flash(str(error), 'warning')
         except RuntimeError:
             flash('Can\'t create user {}. Might already exist. Otherwise check for bad spelling.'.format(request.form['new_user']), 'warning')

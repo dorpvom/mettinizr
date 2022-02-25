@@ -1,19 +1,15 @@
 from flask_security import Security
 
-from database.user_store import UserRoleDatabase
+from database.interface import MettInterface
 
 
 def add_flask_security_to_app(app, config):
     _add_configuration_to_app(app, config)
 
-    user_interface = create_user_interface(config)
+    user_interface = MettInterface(config)
     _ = Security(app, user_interface)
 
     return user_interface
-
-
-def create_user_interface(config):
-    return UserRoleDatabase(config)
 
 
 def _add_configuration_to_app(app, config):

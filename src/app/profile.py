@@ -2,7 +2,7 @@ from flask import render_template, request, flash
 from flask_security import current_user
 
 from app.security.decorator import roles_accepted
-from database.user_store import password_is_legal
+from database.interface import password_is_legal
 
 
 # pylint: disable=redefined-outer-name

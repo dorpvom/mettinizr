@@ -11,7 +11,8 @@ from app.orders import OrderRoutes
 from app.profile import ProfileRoutes
 from app.security.authentication import add_flask_security_to_app
 from app.user import UserRoutes
-from database.mett_store import MettStore
+
+from database.interface import MettInterface
 
 
 class Filter:
@@ -29,7 +30,7 @@ class Filter:
         return unix_time_stamp
 
     def _init_filter(self):
-        self._app.jinja_env.filters['string_list'] = lambda string_list: ', '.join([str(string) for string in string_list])
+        self._app.jinja_env.filters['string_list'] = lambda string_list: ', '.join(str(string) for string in string_list)
         self._app.jinja_env.filters['time_string'] = self._unix_time_to_string
         self._app.jinja_env.filters['user_has_role'] = lambda user, role: role in [role.name for role in user.roles]
 
@@ -70,7 +71,7 @@ class AppSetup:
 
         self.user_interface = add_flask_security_to_app(self.app, self.config)
 
-        self.mett_store = MettStore(config=self.config)
+        self.mett_store = MettInterface(config=self.config)
 
         OrderRoutes(self.app, self.config, self.mett_store)
         DashboardRoutes(self.app, self.config, self.mett_store)

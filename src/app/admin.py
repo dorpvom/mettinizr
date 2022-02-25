@@ -4,14 +4,14 @@ from typing import Dict, Union
 from flask import render_template, request, flash
 from flask_security import current_user
 from app.security.decorator import roles_accepted
-from database.mett_store import StorageException, MettStore
+from database.interface import MettInterface, DatabaseError
 
 
 # pylint: disable=redefined-outer-name
 
 
 class AdminRoutes:
-    def __init__(self, app, config, mett_store: MettStore):
+    def __init__(self, app, config, mett_store: MettInterface):
         self._app = app
         self._config = config
         self._mett_store = mett_store
@@ -39,7 +39,7 @@ class AdminRoutes:
             expiry_date = request.form['expiry']
             try:
                 self._mett_store.create_order(expiry_date)
-            except (StorageException, ValueError) as error:
+            except (DatabaseError, ValueError) as error:
                 flash(str(error), 'warning')
 
         return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
@@ -142,7 +142,7 @@ def _get_change_of_balance(request):
     }
 
 
-def get_store_stats(mett_store: MettStore) -> Dict[str, Union[int, float]]:
+def get_store_stats(mett_store: MettInterface) -> Dict[str, Union[int, float]]:
     deposits = sum(deposit['amount'] for deposit in mett_store.get_deposits())
     purchases = sum(purchase['price'] for purchase in mett_store.list_purchases(processed=True))
     return {
