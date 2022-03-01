@@ -13,18 +13,6 @@ from flask_security.utils import verify_password, hash_password
 from database.offline_objects import Order
 
 
-class Py36Date:  # FIXME: Replace Hack
-    @staticmethod
-    def fromisoformat(date_string: str):
-        return datetime.strptime(date_string, '%Y-%m-%d').date()
-
-
-if sys.version_info[1] < 7:
-    date = Py36Date
-else:
-    from datetime import date
-
-
 class MettInterface(SQLDatabase):
     def create_user(self, name: str, password: str, is_hashed: bool = False):
         if self.user_exists(name):
@@ -83,7 +71,10 @@ class MettInterface(SQLDatabase):
             if self.active_order_exists():
                 raise DatabaseError('No new order can be initialized while another one is active')
 
-            new_entry = OrderEntry(expiry_data=date.fromisoformat(expiry_date), processed=False)
+            new_entry = OrderEntry(
+                expiry_data=datetime.strptime(expiry_date, '%Y-%m-%d').date(),
+                processed=False
+            )
             session.add(new_entry)
             return new_entry
 
