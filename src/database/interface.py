@@ -1,3 +1,4 @@
+import sys
 from typing import List
 
 from passlib.context import CryptContext
@@ -6,10 +7,22 @@ from sqlalchemy.orm import Session
 
 from database.database_objects import BunClassEntry, UserEntry, RoleEntry, SingleOrderEntry, OrderEntry, DepositEntry, PurchaseEntry, PurchaseAuthorizationEntry
 from database.database import SQLDatabase, DatabaseError
-from datetime import date, datetime
+from datetime import datetime
 from flask_security.utils import verify_password, hash_password
 
 from database.offline_objects import Order
+
+
+class Py36Date:  # FIXME: Replace Hack
+    @staticmethod
+    def fromisoformat(date_string: str):
+        return datetime.strptime(date_string, '%Y-%m-%d').date()
+
+
+if sys.version_info[1] < 7:
+    date = Py36Date
+else:
+    from datetime import date
 
 
 class MettInterface(SQLDatabase):
@@ -22,6 +35,10 @@ class MettInterface(SQLDatabase):
             new_entry = UserEntry(name=name, password=password if is_hashed else hash_password(password))
             session.add(new_entry)
             return new_entry
+
+    def get_user(self, name):
+        with self.get_read_write_session() as session:
+            return session.get(UserEntry, name)
 
     def add_role_to_user(self, user: str, role: str):
         if not self.user_exists(user) or not self.role_exists(role):
