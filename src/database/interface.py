@@ -1,5 +1,5 @@
 import sys
-from typing import List
+from typing import List, Union
 
 from passlib.context import CryptContext
 from sqlalchemy import select
@@ -11,6 +11,7 @@ from datetime import datetime
 from flask_security.utils import verify_password, hash_password
 
 from database.offline_objects import Order
+from database.user_store import SecurityUser
 
 
 class MettInterface(SQLDatabase):
@@ -24,9 +25,13 @@ class MettInterface(SQLDatabase):
             session.add(new_entry)
             return new_entry
 
-    def get_user(self, name):
+    def get_user(self, name) -> Union[SecurityUser, None]:
         with self.get_read_write_session() as session:
-            return session.get(UserEntry, name)
+            if not self.user_exists(name):
+                return None
+
+            user_entry = session.get(UserEntry, name)
+            return SecurityUser(name=user_entry.name, password=user_entry.password, roles=[role.name for role in user_entry.roles])
 
     def add_role_to_user(self, user: str, role: str):
         if not self.user_exists(user) or not self.role_exists(role):
@@ -64,6 +69,10 @@ class MettInterface(SQLDatabase):
         with self.get_read_write_session() as session:
             return session.get(BunClassEntry, name) is not None
 
+    def list_bun_classes(self) -> list:
+        with self.get_read_write_session() as session:
+            return list(session.execute(select(BunClassEntry.name)).scalars())
+
     def create_order(self, expiry_date: str):
         with self.get_read_write_session() as session:
             if self._is_expired(expiry_date):
@@ -99,6 +108,72 @@ class MettInterface(SQLDatabase):
         if result is None:
             raise DatabaseError('No current order')
         return Order(*result, [])  # FIXME Solve buns problem
+
+    def drop_current_order(self):
+        # drop current order
+        raise NotImplementedError()
+
+    def process_order(self):
+        # set expire of current order to true and decrease balances according to order
+        raise NotImplementedError()
+
+    def change_balance(self, account, amount, admin):
+        # Store which admin has allowed the balance change
+        raise NotImplementedError()
+
+    def list_accounts(self):
+        raise NotImplementedError()
+
+    def list_purchases(self, processed):
+        # list purchases, if processed is false only those that have not been authorized or declined
+        raise NotImplementedError()
+
+    def authorize_purchase(self, purchase_id, admin):
+        # add purchase.amount to purchase.account.balance
+        raise NotImplementedError()
+
+    def decline_purchase(self, purchase_id, admin):
+        # drop purchase
+        raise NotImplementedError()
+
+    def list_users(self):
+        raise NotImplementedError()
+
+    def list_roles(self):
+        raise NotImplementedError()
+
+    def password_is_correct(self, user_name, password):
+        raise NotImplementedError()
+
+    def change_password(self, user_name, password):
+        raise NotImplementedError()
+
+    def find_user(self, id):
+        return self.get_user(id)
+
+    def find_role(self, role):
+        raise NotImplementedError()
+
+    def remove_role_from_user(self, user, role):
+        raise NotImplementedError()
+
+    def toggle_active(self, user):
+        raise NotImplementedError()
+
+    def deactivate_user(self, user):
+        raise NotImplementedError()
+
+    def activate_user(self, user):
+        raise NotImplementedError()
+
+    def find_or_create_role(self, name, **kwargs):
+        raise NotImplementedError()
+
+    def delete_user(self, user: str):
+        raise NotImplementedError()
+
+    def commit(self):
+        pass
 
 
 def password_is_legal(password: str) -> bool:
