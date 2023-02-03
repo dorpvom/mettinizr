@@ -57,6 +57,17 @@ def test_role_addition(interface):
     assert interface.get_user('user').roles[0].name == 'role'
 
 
+def test_role_addition_errors(interface):
+    with pytest.raises(DatabaseError):
+        interface.add_role_to_user('user', 'non-existent')
+    with pytest.raises(DatabaseError):
+        interface.add_role_to_user('non-existent', 'role')
+
+    interface.add_role_to_user('user', 'role')
+    with pytest.raises(DatabaseError):
+        interface.add_role_to_user('user', 'role')
+
+
 def test_add_bun_class(interface):
     assert not interface.bun_class_exists('donut')
     interface.add_bun_class('donut', 1.0, 50.0)
@@ -69,6 +80,17 @@ def test_create_order(interface):
     interface.create_order(expiry_date=HAS_NOT_EXPIRED)
     assert interface.active_order_exists()
     assert not interface.current_order_is_expired()
+
+
+def test_create_order_exists(interface):
+    interface.create_order(expiry_date=HAS_NOT_EXPIRED)
+    with pytest.raises(DatabaseError):
+        interface.create_order(expiry_date=HAS_NOT_EXPIRED)
+
+
+def test_no_order_exists(interface):
+    with pytest.raises(DatabaseError):
+        interface.current_order_is_expired()
 
 
 def test_create_order_expired(interface):
@@ -91,6 +113,11 @@ def test_expire_order(interface):
     interface.order_bun('user', 'Weizen')
     interface.process_order()
     assert interface.get_balance('user') == -1.0
+
+
+def test_get_balance(interface):
+    assert interface.get_balance('user') == 0.0
+    assert interface.get_balance('non-existent') is None
 
 
 def test_change_balance(interface):
