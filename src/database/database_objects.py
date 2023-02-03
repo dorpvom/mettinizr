@@ -28,6 +28,7 @@ class UserEntry(Base):
 
     name = Column(VARCHAR, primary_key=True)
     password = Column(VARCHAR, nullable=False)
+    balance = Column(Float, nullable=False)
     # fs_uniquifier = Column(VARCHAR, unique=True, nullable=False)
 
     roles = relationship(
@@ -67,7 +68,7 @@ class OrderEntry(Base):
     __tablename__ = 'order'
 
     _id = Column(Integer, primary_key=True)
-    expiry_data = Column(Date, nullable=False)
+    expiry_date = Column(Date, nullable=False)
     processed = Column(Boolean, nullable=False)
 
     buns = relationship(
@@ -77,7 +78,7 @@ class OrderEntry(Base):
     )
 
     def __repr__(self) -> str:
-        return f'Order({self.expiry_data}, {self.processed}, {self.buns})'
+        return f'Order({self.expiry_date}, {self.processed}, {self.buns})'
 
 
 class PurchaseAuthorizationEntry(Base):

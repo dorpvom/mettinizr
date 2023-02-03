@@ -2,7 +2,7 @@ import sys
 from typing import List, Union
 
 from passlib.context import CryptContext
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 
 from database.database_objects import BunClassEntry, UserEntry, RoleEntry, SingleOrderEntry, OrderEntry, DepositEntry, PurchaseEntry, PurchaseAuthorizationEntry
@@ -15,13 +15,31 @@ from database.user_store import SecurityUser
 
 
 class MettInterface(SQLDatabase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def initialize_bun_classes(self):
+        with self.get_read_write_session() as session:
+            if not self.list_bun_classes():
+                for bun in self.config.get('Mett', 'default_buns').split(','):
+                    bun_entry = BunClassEntry(
+                        name=bun.strip(),
+                        price=self.config.getfloat('Mett', 'default_price'),
+                        mett=self.config.getfloat('Mett', 'default_grams')
+                    )
+                    session.add(bun_entry)
+
     def create_user(self, name: str, password: str, is_hashed: bool = False):
         if self.user_exists(name):
             raise DatabaseError('User already exists')
         if not is_hashed and not password_is_legal(password):
             raise DatabaseError('Illegal password. Ask admin for password rules.')
         with self.get_read_write_session() as session:
-            new_entry = UserEntry(name=name, password=password if is_hashed else hash_password(password))
+            new_entry = UserEntry(
+                name=name,
+                password=password if is_hashed else hash_password(password),
+                balance=0.0
+            )
             session.add(new_entry)
             return new_entry
 
@@ -32,6 +50,17 @@ class MettInterface(SQLDatabase):
 
             user_entry = session.get(UserEntry, name)
             return SecurityUser(name=user_entry.name, password=user_entry.password, roles=[role.name for role in user_entry.roles])
+
+    def get_balance(self, name) -> Union[float, None]:
+        return self._get_user_attribute(name, 'balance')
+
+    def _get_user_attribute(self, username: str, attribute: str):
+        with self.get_read_write_session() as session:
+            if not self.user_exists(username):
+                return None
+
+            user = session.get(UserEntry, username)
+            return getattr(user, attribute)
 
     def add_role_to_user(self, user: str, role: str):
         if not self.user_exists(user) or not self.role_exists(role):
@@ -71,7 +100,8 @@ class MettInterface(SQLDatabase):
 
     def list_bun_classes(self) -> list:
         with self.get_read_write_session() as session:
-            return list(session.execute(select(BunClassEntry.name)).scalars())
+            classes = session.execute(select(BunClassEntry.name))
+            return list(classes.scalars())
 
     def create_order(self, expiry_date: str):
         with self.get_read_write_session() as session:
@@ -81,7 +111,7 @@ class MettInterface(SQLDatabase):
                 raise DatabaseError('No new order can be initialized while another one is active')
 
             new_entry = OrderEntry(
-                expiry_data=datetime.strptime(expiry_date, '%Y-%m-%d').date(),
+                expiry_date=datetime.strptime(expiry_date, '%Y-%m-%d').date(),
                 processed=False
             )
             session.add(new_entry)
@@ -103,23 +133,44 @@ class MettInterface(SQLDatabase):
             return self._is_expired(self._get_current_order(session).expiry_date)
 
     @staticmethod
-    def _get_current_order(session: Session) -> Order:
-        result = session.execute(select(OrderEntry.processed, OrderEntry.expiry_data).filter(OrderEntry.processed == False)).one_or_none()
-        if result is None:
-            raise DatabaseError('No current order')
-        return Order(*result, [])  # FIXME Solve buns problem
+    def _get_current_order(session) -> OrderEntry:
+        return session.execute(select(OrderEntry).where(OrderEntry.processed == False)).one_or_none()[0]
 
     def drop_current_order(self):
         # drop current order
-        raise NotImplementedError()
+        with self.get_read_write_session() as session:
+            session.execute(delete(OrderEntry).where(OrderEntry.processed == False))
+
+    def order_bun(self, user: str, bun_class: str):
+        with self.get_read_write_session() as session:
+            order = self._get_current_order(session)
+            bun = session.get(BunClassEntry, bun_class)
+            user = session.get(UserEntry, user)
+            entry = SingleOrderEntry(account=user.name, bun=bun.name, order=order._id)
+            session.add(entry)
 
     def process_order(self):
         # set expire of current order to true and decrease balances according to order
-        raise NotImplementedError()
+        with self.get_read_write_session() as session:
+            order = self._get_current_order(session)
+            for bun in order.buns:
+                pass
+                self._charge_bun(session, bun.account, bun.bun)
+
+            order.processed = True
+            session.commit()
+
+    def _charge_bun(self, session, account, bun):
+        price = session.get(BunClassEntry, bun).price
+        user = session.get(UserEntry, account)
+        user.balance -= price
 
     def change_balance(self, account, amount, admin):
         # Store which admin has allowed the balance change
-        raise NotImplementedError()
+        with self.get_read_write_session() as session:
+            user = session.get(UserEntry, account)
+            user.balance += amount
+            session.commit()
 
     def list_accounts(self):
         raise NotImplementedError()
