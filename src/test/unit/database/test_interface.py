@@ -124,3 +124,10 @@ def test_change_balance(interface):
     assert interface.get_balance('user') == 0.0
     interface.change_balance('user', 1.0, 'user')
     assert interface.get_balance('user') == 1.0
+
+
+def test_list_accounts(interface, app):
+    assert interface.list_accounts() == ['user']
+    with app.app.app_context():
+        interface.create_user('foo', 'foo')
+    assert interface.list_accounts() == ['foo', 'user']

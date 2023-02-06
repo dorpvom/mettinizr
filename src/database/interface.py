@@ -154,7 +154,6 @@ class MettInterface(SQLDatabase):
         with self.get_read_write_session() as session:
             order = self._get_current_order(session)
             for bun in order.buns:
-                pass
                 self._charge_bun(session, bun.account, bun.bun)
 
             order.processed = True
@@ -173,7 +172,9 @@ class MettInterface(SQLDatabase):
             session.commit()
 
     def list_accounts(self):
-        raise NotImplementedError()
+        with self.get_read_write_session() as session:
+            accounts = session.execute(select(UserEntry).order_by(UserEntry.name)).all()
+            return [account[0].name for account in accounts]
 
     def list_purchases(self, processed):
         # list purchases, if processed is false only those that have not been authorized or declined
