@@ -1,6 +1,6 @@
 pytest
 flask
-flask_security
+flask-security-too
 flask_sqlalchemy
 bcrypt
 uwsgi
