@@ -19,7 +19,7 @@ class DashboardRoutes:
     @roles_accepted('user', 'admin')
     def _show_home_dashboard(self):
         user = current_user.name
-        information = self._mett_store.get_account_information(user)
+        balance = self._mett_store.get_balance(user)
         order_exists, order = True, {}
         try:
             order = self._mett_store.get_current_user_buns(user)
@@ -27,4 +27,4 @@ class DashboardRoutes:
             order_exists = False
 
         order_history, mean_buns = self._mett_store.get_order_history(user)
-        return render_template('dashboard.html', order_exists=order_exists, username=user, order=order, balance=information['balance'], history=order_history, mean_buns=mean_buns)
+        return render_template('dashboard.html', order_exists=order_exists, username=user, order=order, balance=balance, history=order_history, mean_buns=mean_buns)

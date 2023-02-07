@@ -195,7 +195,8 @@ class MettInterface(SQLDatabase):
         raise NotImplementedError()
 
     def password_is_correct(self, user_name, password):
-        raise NotImplementedError()
+        stored_password = self.get_user(user_name).password
+        return verify_password(password, stored_password)
 
     def change_password(self, user_name, password):
         raise NotImplementedError()
@@ -226,6 +227,49 @@ class MettInterface(SQLDatabase):
 
     def commit(self):
         pass
+
+    def get_deposits(self):
+        raise NotImplementedError()
+    def change_mett_formula(self, bun, amount):
+        # set mett amount for referenced bun
+        raise NotImplementedError()
+
+    def change_bun_price(self, bun, price):
+        # set mett price for referenced bun
+        raise NotImplementedError()
+
+    def assign_spare(self, bun_class, user):
+        raise NotImplementedError()
+
+    def reroute_bun(self, bun_class, user, target):
+        # Change order from one user to another
+        raise NotImplementedError()
+
+    def state_purchase(self, account, amount, purpose):
+        # add account, amount, purpose as non processed purchase
+        raise NotImplementedError()
+
+    def get_order_history(self, user):
+        # get list of (order_id, orders) where orders is slice of orders ordered by account
+        raise NotImplementedError()
+
+    def get_current_user_buns(self, user):
+        # get list of buns ordered by user
+        raise NotImplementedError()
+
+    def get_current_bun_order(self):
+        # get aggregated current bun order
+        raise NotImplementedError()
+
+    def get_current_mett_order(self):
+        # generate mett order from bun order
+        raise NotImplementedError()
+
+    def list_bun_classes_with_price(self) -> dict:
+        raise NotImplementedError()
+
+    def get_all_order_information(self) -> list:
+        raise NotImplementedError()
 
 
 def password_is_legal(password: str) -> bool:

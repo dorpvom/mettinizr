@@ -131,3 +131,9 @@ def test_list_accounts(interface, app):
     with app.app.app_context():
         interface.create_user('foo', 'foo')
     assert interface.list_accounts() == ['foo', 'user']
+
+
+def test_password_is_correct(interface, app):
+    with app.app.app_context():
+        assert interface.password_is_correct('user', 'user')
+        assert not interface.password_is_correct('user', 'foo')

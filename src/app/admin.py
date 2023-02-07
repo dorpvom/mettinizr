@@ -63,7 +63,7 @@ class AdminRoutes:
 
             return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
 
-        user_names = [name for _id, name in self._mett_store.list_accounts()]
+        user_names = self._mett_store.list_accounts()
         return render_template('admin/balance.html', users=user_names)
 
     @roles_accepted('admin')
@@ -102,7 +102,7 @@ class AdminRoutes:
         if request.method == 'POST':
             self._mett_store.assign_spare(bun_class=request.form['bun'], user=request.form['username'])
             return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
-        return render_template('admin/spare.html', bun_classes=self._mett_store.list_bun_classes(), users=[name for _id, name in self._mett_store.list_accounts()])
+        return render_template('admin/spare.html', bun_classes=self._mett_store.list_bun_classes(), users=self._mett_store.list_accounts())
 
     def _apply_change_to_formula(self, request):
         if 'price' in request.form:
@@ -122,7 +122,7 @@ class AdminRoutes:
         if request.method == 'POST':
             self._mett_store.order_bun(request.form['username'], request.form['bun'])
             return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
-        return render_template('admin/assign.html', bun_classes=self._mett_store.list_bun_classes(), users=[name for _id, name in self._mett_store.list_accounts()], order_exists=self._mett_store.active_order_exists())
+        return render_template('admin/assign.html', bun_classes=self._mett_store.list_bun_classes(), users=self._mett_store.list_accounts(), order_exists=self._mett_store.active_order_exists())
 
     @roles_accepted('admin')
     def _reroute_bun(self):
@@ -132,7 +132,7 @@ class AdminRoutes:
             except ValueError:
                 flash('User {} has not order a {} bun'.format(request.form['username'], request.form['bun']))
             return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
-        return render_template('admin/reroute.html', bun_classes=self._mett_store.list_bun_classes(), users=[name for _id, name in self._mett_store.list_accounts()], order_exist=self._mett_store.active_order_exists())
+        return render_template('admin/reroute.html', bun_classes=self._mett_store.list_bun_classes(), users=self._mett_store.list_accounts(), order_exist=self._mett_store.active_order_exists())
 
 
 def _get_change_of_balance(request):

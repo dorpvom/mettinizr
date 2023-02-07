@@ -47,7 +47,7 @@ class UserRoutes:
     def _delete_user(self, name):
         try:
             admin = current_user.name if not current_user.is_anonymous else 'anonymous'
-            balance = self._mett_store.get_account_information(name)['balance']
+            balance = self._mett_store.get_balance(name)
             self._mett_store.change_balance(name, -balance, admin)
             self._mett_store.delete_account(name)
             self._user_interface.delete_user(name)
@@ -62,7 +62,7 @@ class UserRoutes:
             information = {
                 'name': user['name'],
                 'roles': user['roles'],
-                'balance': self._mett_store.get_account_information(user['name'])['balance']
+                'balance': self._mett_store.get_balance(user['name'])
             }
             yield information
 
