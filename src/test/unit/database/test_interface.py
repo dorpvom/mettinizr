@@ -57,6 +57,19 @@ def test_role_addition(interface):
     assert interface.get_user('user').roles[0].name == 'role'
 
 
+def test_role_removal(interface):
+    interface.add_role_to_user('user', 'role')
+    assert interface.get_user('user').roles
+    interface.remove_role_from_user('user', 'role')
+    assert not interface.get_user('user').roles
+
+
+def test_get_roles(interface):
+    assert not interface.get_roles('user')
+    interface.add_role_to_user('user', 'role')
+    assert interface.get_roles('user') == ['role']
+
+
 def test_role_addition_errors(interface):
     with pytest.raises(DatabaseError):
         interface.add_role_to_user('user', 'non-existent')
@@ -137,3 +150,11 @@ def test_password_is_correct(interface, app):
     with app.app.app_context():
         assert interface.password_is_correct('user', 'user')
         assert not interface.password_is_correct('user', 'foo')
+
+
+def test_state_purchase(interface):
+    assert not interface.list_purchases(False)
+    interface.state_purchase('user', 13.37, 'mett order')
+    purchase = interface.list_purchases(False)[0]
+    assert purchase.account == 'user'
+    assert 13.5 >= purchase.price >= 13

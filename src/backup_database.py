@@ -25,6 +25,8 @@ class MongoEncoder(json.JSONEncoder):
 
 
 def backup(app, user_store, mett_store: MettStore):
+    # FIXME Not working since change in database interface (list_users())
+    # FIXME And for many another reason ...
     with app.app_context():
         try:  # Old user database
             roles = [role.name for role in user_store.list_roles()]
@@ -34,7 +36,7 @@ def backup(app, user_store, mett_store: MettStore):
             users = [
                 User(email=user.name, password=user.password, roles=[role.name for role in user.roles])
                 for user in [
-                    user_store.get_user(user['name']) for user in user_store.list_users()
+                    user_store.get_user(user) for user in user_store.list_accounts()
                 ]
             ]
 

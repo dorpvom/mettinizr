@@ -58,11 +58,11 @@ class UserRoutes:
         return redirect(url_for('user'))
 
     def _generate_user_information(self):
-        for user in self._user_interface.list_users():
+        for user in self._user_interface.list_accounts():
             information = {
-                'name': user['name'],
-                'roles': user['roles'],
-                'balance': self._mett_store.get_balance(user['name'])
+                'name': user,
+                'roles': self._user_interface.get_roles(user),
+                'balance': self._mett_store.get_balance(user)
             }
             yield information
 

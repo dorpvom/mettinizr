@@ -7,5 +7,6 @@ from collections import namedtuple
     order = Column(Integer, ForeignKey('order._id'))
 '''
 
+Purchase = namedtuple('Purchase', ['p_id', 'account', 'price', 'purpose', 'timestamp', 'processed'])
 Order = namedtuple('Order', ['processed', 'expiry_date', 'buns'])
 OrderedBun = namedtuple('OrderedBun', ['bun', 'account', 'order'])

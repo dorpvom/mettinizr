@@ -10,7 +10,7 @@ from database.database import SQLDatabase, DatabaseError
 from datetime import datetime
 from flask_security.utils import verify_password, hash_password
 
-from database.offline_objects import Order
+from database.offline_objects import Order, Purchase
 from database.user_store import SecurityUser
 
 
@@ -71,6 +71,15 @@ class MettInterface(SQLDatabase):
                 raise DatabaseError('User already has role')
             user_entry.roles.append(session.get(RoleEntry, role))
 
+    def remove_role_from_user(self, user, role):
+        if not self.user_exists(user) or not self.role_exists(role):
+            raise DatabaseError('User or role does not exist')
+        with self.get_read_write_session() as session:
+            user_entry = session.get(UserEntry, user)
+            if role not in [role.name for role in user_entry.roles]:
+                raise DatabaseError('User does not have role')
+            user_entry.roles.remove(session.get(RoleEntry, role))
+
     def create_role(self, name: str):
         with self.get_read_write_session() as session:
             new_entry = RoleEntry(name=name)
@@ -80,6 +89,11 @@ class MettInterface(SQLDatabase):
     def get_role(self, name):
         with self.get_read_write_session() as session:
             return session.get(RoleEntry, name)
+
+    def get_roles(self, user: str) -> List[str]:
+        with self.get_read_write_session() as session:
+            user_entry = session.get(UserEntry, user)
+            return [role.name for role in user_entry.roles]
 
     def role_exists(self, name: str) -> bool:
         with self.get_read_write_session() as session:
@@ -176,9 +190,39 @@ class MettInterface(SQLDatabase):
             accounts = session.execute(select(UserEntry).order_by(UserEntry.name)).all()
             return [account[0].name for account in accounts]
 
+    def state_purchase(self, account, amount, purpose):
+        # add account, amount, purpose as non processed purchase
+        with self.get_read_write_session() as session:
+            entry = PurchaseEntry(
+                account=account,
+                price=amount,
+                purpose=purpose,
+                timestamp=datetime.now().date(),
+                processed=False
+            )
+            session.add(entry)
+
     def list_purchases(self, processed):
         # list purchases, if processed is false only those that have not been authorized or declined
-        raise NotImplementedError()
+        with self.get_read_write_session() as session:
+            purchases = session.execute(select(PurchaseEntry)).all()
+            return [
+                Purchase(
+                    p_id=purchase[0]._id,
+                    account=purchase[0].account,
+                    price=purchase[0].price,
+                    purpose=purchase[0].purpose,
+                    timestamp=purchase[0].timestamp,
+                    processed=self._resolve_purchase_processing(purchase[0], session)
+                )
+                for purchase in purchases
+            ]
+
+    def _resolve_purchase_processing(self, purchase: PurchaseEntry, session: Session) -> dict:
+        entry = session.get(PurchaseAuthorizationEntry, purchase.processed)
+        if not entry:
+            return {}
+        return {'authorized': entry.authorized, 'at': entry.at, 'by': entry.by}
 
     def authorize_purchase(self, purchase_id, admin):
         # add purchase.amount to purchase.account.balance
@@ -186,9 +230,6 @@ class MettInterface(SQLDatabase):
 
     def decline_purchase(self, purchase_id, admin):
         # drop purchase
-        raise NotImplementedError()
-
-    def list_users(self):
         raise NotImplementedError()
 
     def list_roles(self):
@@ -205,9 +246,6 @@ class MettInterface(SQLDatabase):
         return self.get_user(id)
 
     def find_role(self, role):
-        raise NotImplementedError()
-
-    def remove_role_from_user(self, user, role):
         raise NotImplementedError()
 
     def toggle_active(self, user):
@@ -230,6 +268,7 @@ class MettInterface(SQLDatabase):
 
     def get_deposits(self):
         raise NotImplementedError()
+
     def change_mett_formula(self, bun, amount):
         # set mett amount for referenced bun
         raise NotImplementedError()
@@ -243,10 +282,6 @@ class MettInterface(SQLDatabase):
 
     def reroute_bun(self, bun_class, user, target):
         # Change order from one user to another
-        raise NotImplementedError()
-
-    def state_purchase(self, account, amount, purpose):
-        # add account, amount, purpose as non processed purchase
         raise NotImplementedError()
 
     def get_order_history(self, user):
