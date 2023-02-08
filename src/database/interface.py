@@ -198,7 +198,7 @@ class MettInterface(SQLDatabase):
                 price=amount,
                 purpose=purpose,
                 timestamp=datetime.now().date(),
-                processed=False
+                processed=None
             )
             session.add(entry)
 
@@ -218,15 +218,38 @@ class MettInterface(SQLDatabase):
                 for purchase in purchases
             ]
 
-    def _resolve_purchase_processing(self, purchase: PurchaseEntry, session: Session) -> dict:
-        entry = session.get(PurchaseAuthorizationEntry, purchase.processed)
-        if not entry:
+    @staticmethod
+    def _resolve_purchase_processing(purchase: PurchaseEntry, session: Session) -> dict:
+        if not purchase.processed:
             return {}
+        entry = session.get(PurchaseAuthorizationEntry, purchase.processed)
         return {'authorized': entry.authorized, 'at': entry.at, 'by': entry.by}
 
     def authorize_purchase(self, purchase_id, admin):
         # add purchase.amount to purchase.account.balance
-        raise NotImplementedError()
+        if not self.user_exists(admin):
+            raise DatabaseError('Admin name does not exist')
+        with self.get_read_write_session() as session:
+            entry = session.get(PurchaseEntry, purchase_id)
+
+            if entry.processed:
+                authorization_entry = session.get(PurchaseAuthorizationEntry, entry.processed)
+                if authorization_entry.authorized:
+                    raise DatabaseError('Purchase already authorized')
+                authorization_entry.authorized = True
+                authorization_entry.at = datetime.now().date()
+                authorization_entry.by = admin
+            else:
+                authorization_entry = PurchaseAuthorizationEntry(
+                    authorized=True,
+                    at=datetime.now().date(),
+                    by=admin
+                )
+                session.add(authorization_entry)
+                entry.processed = authorization_entry
+
+            self.change_balance(entry.account, entry.price, admin)
+
 
     def decline_purchase(self, purchase_id, admin):
         # drop purchase

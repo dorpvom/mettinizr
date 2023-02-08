@@ -158,3 +158,11 @@ def test_state_purchase(interface):
     purchase = interface.list_purchases(False)[0]
     assert purchase.account == 'user'
     assert 13.5 >= purchase.price >= 13
+
+
+def test_authorize_purchase(interface):
+    interface.state_purchase('user', 13.37, 'mett order')
+    purchase = interface.list_purchases(False)[0]
+    assert interface.get_balance('user') == 0
+    interface.authorize_purchase(purchase.p_id, 'user')
+    assert 13.5 >= interface.get_balance('user') >= 13
