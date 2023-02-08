@@ -73,21 +73,11 @@ class OrderEntry(Base):
 
     buns = relationship(
         'SingleOrderEntry',
-        # back_populates='order',
         cascade='all, delete-orphan'
     )
 
     def __repr__(self) -> str:
         return f'Order({self.expiry_date}, {self.processed}, {self.buns})'
-
-
-class PurchaseAuthorizationEntry(Base):
-    __tablename__ = 'purchase_authorization'
-
-    _id = Column(Integer, primary_key=True)
-    authorized = Column(Boolean)
-    at = Column(Date)
-    by = Column(VARCHAR, ForeignKey('user.name'))
 
 
 class PurchaseEntry(Base):
@@ -98,7 +88,14 @@ class PurchaseEntry(Base):
     price = Column(Float, nullable=False)
     purpose = Column(VARCHAR, nullable=False)
     timestamp = Column(Date, nullable=False)
-    processed = Column(Integer, ForeignKey('purchase_authorization._id'))
+
+    processed = Column(Boolean, nullable=False)
+    authorized = Column(Boolean)
+    at = Column(Date)
+    by = Column(VARCHAR, ForeignKey('user.name'))
+
+    def __repr__(self) -> str:
+        return f'Purchase({self.purpose}, {self.account}, {self.price}, {self.processed})'
 
 
 class DepositEntry(Base):
@@ -109,3 +106,6 @@ class DepositEntry(Base):
     user = Column(VARCHAR, ForeignKey('user.name'))
     amount = Column(Float, nullable=False)
     timestamp = Column(Date, nullable=False)
+
+    def __repr__(self) -> str:
+        return f'Deposit({self.user}, {self.amount}, {self.timestamp})'

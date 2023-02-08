@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 
-from database.database_objects import BunClassEntry, UserEntry, RoleEntry, SingleOrderEntry, OrderEntry, DepositEntry, PurchaseEntry, PurchaseAuthorizationEntry
+from database.database_objects import BunClassEntry, UserEntry, RoleEntry, SingleOrderEntry, OrderEntry, DepositEntry, PurchaseEntry
 from database.database import SQLDatabase, DatabaseError
 from datetime import datetime
 from flask_security.utils import verify_password, hash_password
@@ -191,14 +191,14 @@ class MettInterface(SQLDatabase):
             return [account[0].name for account in accounts]
 
     def state_purchase(self, account, amount, purpose):
-        # add account, amount, purpose as non processed purchase
+        # add account, amount, purpose as non-processed purchase
         with self.get_read_write_session() as session:
             entry = PurchaseEntry(
                 account=account,
                 price=amount,
                 purpose=purpose,
                 timestamp=datetime.now().date(),
-                processed=None
+                processed=False
             )
             session.add(entry)
 
@@ -213,17 +213,14 @@ class MettInterface(SQLDatabase):
                     price=purchase[0].price,
                     purpose=purchase[0].purpose,
                     timestamp=purchase[0].timestamp,
-                    processed=self._resolve_purchase_processing(purchase[0], session)
+                    processed={
+                        'authorized': purchase[0].authorized,
+                        'by': purchase[0].by,
+                        'at': purchase[0].at
+                    }
                 )
                 for purchase in purchases
             ]
-
-    @staticmethod
-    def _resolve_purchase_processing(purchase: PurchaseEntry, session: Session) -> dict:
-        if not purchase.processed:
-            return {}
-        entry = session.get(PurchaseAuthorizationEntry, purchase.processed)
-        return {'authorized': entry.authorized, 'at': entry.at, 'by': entry.by}
 
     def authorize_purchase(self, purchase_id, admin):
         # add purchase.amount to purchase.account.balance
@@ -232,24 +229,15 @@ class MettInterface(SQLDatabase):
         with self.get_read_write_session() as session:
             entry = session.get(PurchaseEntry, purchase_id)
 
-            if entry.processed:
-                authorization_entry = session.get(PurchaseAuthorizationEntry, entry.processed)
-                if authorization_entry.authorized:
-                    raise DatabaseError('Purchase already authorized')
-                authorization_entry.authorized = True
-                authorization_entry.at = datetime.now().date()
-                authorization_entry.by = admin
-            else:
-                authorization_entry = PurchaseAuthorizationEntry(
-                    authorized=True,
-                    at=datetime.now().date(),
-                    by=admin
-                )
-                session.add(authorization_entry)
-                entry.processed = authorization_entry
+            if entry.processed and entry.authorized:
+                raise DatabaseError('Purchase already authorized')
+
+            entry.processed = True
+            entry.authorized = True
+            entry.at = datetime.now().date()
+            entry.by = admin
 
             self.change_balance(entry.account, entry.price, admin)
-
 
     def decline_purchase(self, purchase_id, admin):
         # drop purchase
