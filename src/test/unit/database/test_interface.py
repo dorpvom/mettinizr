@@ -70,12 +70,19 @@ def test_get_roles(interface):
     assert interface.get_roles('user') == ['role']
 
 
-def test_role_addition_errors(interface):
+def test_role_change_errors(interface):
     with pytest.raises(DatabaseError):
         interface.add_role_to_user('user', 'non-existent')
     with pytest.raises(DatabaseError):
-        interface.add_role_to_user('non-existent', 'role')
+        interface.remove_role_from_user('user', 'non-existent')
 
+    with pytest.raises(DatabaseError):
+        interface.add_role_to_user('non-existent', 'role')
+    with pytest.raises(DatabaseError):
+        interface.remove_role_from_user('non-existent', 'role')
+
+    with pytest.raises(DatabaseError):
+        interface.remove_role_from_user('user', 'role')
     interface.add_role_to_user('user', 'role')
     with pytest.raises(DatabaseError):
         interface.add_role_to_user('user', 'role')
@@ -152,6 +159,16 @@ def test_password_is_correct(interface, app):
         assert not interface.password_is_correct('user', 'foo')
 
 
+def test_change_password(interface, app):
+    with app.app.app_context():
+        assert interface.password_is_correct('user', 'user')
+        interface.change_password('user', 'foo')
+        assert interface.password_is_correct('user', 'foo')
+
+    with pytest.raises(DatabaseError):
+        interface.change_password('non-existent', 'password')
+
+
 def test_state_purchase(interface):
     assert not interface.list_purchases(False)
     interface.state_purchase('user', 13.37, 'mett order')
@@ -166,3 +183,61 @@ def test_authorize_purchase(interface):
     assert interface.get_balance('user') == 0
     interface.authorize_purchase(purchase.p_id, 'user')
     assert 13.5 >= interface.get_balance('user') >= 13
+
+
+def test_decline_purchase(interface):
+    interface.state_purchase('user', 13.37, 'mett order')
+    purchase = interface.list_purchases(False)[0]
+    assert interface.get_balance('user') == 0
+    interface.decline_purchase(purchase.p_id, 'user')
+    assert interface.get_balance('user') == 0
+    purchase_after = interface.list_purchases(True)[0]
+    assert purchase.p_id == purchase_after.p_id
+
+
+def test_list_roles(interface):
+    assert interface.list_roles() == ['role']
+    interface.create_role('foo')
+    assert interface.list_roles() == ['foo', 'role']
+
+
+def test_delete_user(interface):
+    assert interface.user_exists('user')
+    interface.delete_user('user')
+    assert not interface.user_exists('user')
+
+    with pytest.raises(DatabaseError):
+        interface.delete_user('user')
+
+
+def test_change_bun_price(interface):
+    interface.change_bun_price('Weizen', 2.0)
+
+    assert interface.get_balance('user') == 0.0
+    interface.create_order(HAS_NOT_EXPIRED)
+    interface.order_bun('user', 'Weizen')
+    interface.process_order()
+    assert interface.get_balance('user') == -2.0
+
+
+def test_change_mett_amount(interface):
+    with pytest.raises(DatabaseError):
+        interface.get_current_mett_order()
+
+    interface.create_order(HAS_NOT_EXPIRED)
+
+    interface.change_mett_formula('Weizen', 121.1)
+    interface.order_bun('user', 'Weizen')
+    assert interface.get_current_mett_order() == 121.1
+
+
+def test_get_current_bun_order(interface):
+    with pytest.raises(DatabaseError):
+        interface.get_current_bun_order()
+
+    interface.create_order(HAS_NOT_EXPIRED)
+    assert interface.get_current_bun_order() == {'Weizen': 0, 'Roggen': 0}
+    interface.order_bun('user', 'Weizen')
+    interface.order_bun('user', 'Weizen')
+    interface.order_bun('user', 'Roggen')
+    assert interface.get_current_bun_order() == {'Weizen': 2, 'Roggen': 1}

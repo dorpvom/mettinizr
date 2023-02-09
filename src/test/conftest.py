@@ -10,4 +10,5 @@ def config_for_tests():
     config.read(str(Path(Path(__file__).parent.parent, 'config', 'app.config')))
     config.set('Runtime', 'testing', 'true')
     config.set('Database', 'database_path', ':memory:')
+    config.set('Mett', 'default_buns', 'Weizen, Roggen')
     return config

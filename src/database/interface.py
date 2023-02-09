@@ -171,7 +171,6 @@ class MettInterface(SQLDatabase):
                 self._charge_bun(session, bun.account, bun.bun)
 
             order.processed = True
-            session.commit()
 
     def _charge_bun(self, session, account, bun):
         price = session.get(BunClassEntry, bun).price
@@ -187,8 +186,8 @@ class MettInterface(SQLDatabase):
 
     def list_accounts(self):
         with self.get_read_write_session() as session:
-            accounts = session.execute(select(UserEntry).order_by(UserEntry.name)).all()
-            return [account[0].name for account in accounts]
+            accounts = session.scalars(select(UserEntry).order_by(UserEntry.name)).all()
+            return [account.name for account in accounts]
 
     def state_purchase(self, account, amount, purpose):
         # add account, amount, purpose as non-processed purchase
@@ -205,18 +204,18 @@ class MettInterface(SQLDatabase):
     def list_purchases(self, processed):
         # list purchases, if processed is false only those that have not been authorized or declined
         with self.get_read_write_session() as session:
-            purchases = session.execute(select(PurchaseEntry)).all()
+            purchases = session.scalars(select(PurchaseEntry)).all()
             return [
                 Purchase(
-                    p_id=purchase[0]._id,
-                    account=purchase[0].account,
-                    price=purchase[0].price,
-                    purpose=purchase[0].purpose,
-                    timestamp=purchase[0].timestamp,
+                    p_id=purchase._id,
+                    account=purchase.account,
+                    price=purchase.price,
+                    purpose=purchase.purpose,
+                    timestamp=purchase.timestamp,
                     processed={
-                        'authorized': purchase[0].authorized,
-                        'by': purchase[0].by,
-                        'at': purchase[0].at
+                        'authorized': purchase.authorized,
+                        'by': purchase.by,
+                        'at': purchase.at
                     }
                 )
                 for purchase in purchases
@@ -229,8 +228,8 @@ class MettInterface(SQLDatabase):
         with self.get_read_write_session() as session:
             entry = session.get(PurchaseEntry, purchase_id)
 
-            if entry.processed and entry.authorized:
-                raise DatabaseError('Purchase already authorized')
+            if entry.processed:
+                raise DatabaseError('Purchase already processed')
 
             entry.processed = True
             entry.authorized = True
@@ -241,17 +240,36 @@ class MettInterface(SQLDatabase):
 
     def decline_purchase(self, purchase_id, admin):
         # drop purchase
-        raise NotImplementedError()
+        if not self.user_exists(admin):
+            raise DatabaseError('Admin name does not exist')
+        with self.get_read_write_session() as session:
+            entry = session.get(PurchaseEntry, purchase_id)
+
+            if entry.processed:
+                raise DatabaseError('Purchase already processed')
+
+            entry.processed = True
+            entry.authorized = False
+            entry.at = datetime.now().date()
+            entry.by = admin
 
     def list_roles(self):
-        raise NotImplementedError()
+        with self.get_read_write_session() as session:
+            roles = session.scalars(select(RoleEntry).order_by(RoleEntry.name)).all()
+            return [role.name for role in roles]
 
     def password_is_correct(self, user_name, password):
         stored_password = self.get_user(user_name).password
         return verify_password(password, stored_password)
 
     def change_password(self, user_name, password):
-        raise NotImplementedError()
+        if not self.user_exists(user_name):
+            raise DatabaseError('User does not exist')
+        if not password_is_legal(password):
+            raise DatabaseError('Illegal password. Ask admin for password rules.')
+        with self.get_read_write_session() as session:
+            entry = session.get(UserEntry, user_name)
+            entry.password = hash_password(password)
 
     def find_user(self, id):
         return self.get_user(id)
@@ -272,7 +290,10 @@ class MettInterface(SQLDatabase):
         raise NotImplementedError()
 
     def delete_user(self, user: str):
-        raise NotImplementedError()
+        if not self.user_exists(user):
+            raise DatabaseError('User does not exist')
+        with self.get_read_write_session() as session:
+            session.execute(delete(UserEntry).where(UserEntry.name == user))
 
     def commit(self):
         pass
@@ -280,13 +301,21 @@ class MettInterface(SQLDatabase):
     def get_deposits(self):
         raise NotImplementedError()
 
-    def change_mett_formula(self, bun, amount):
+    def change_mett_formula(self, bun: str, amount: float):
         # set mett amount for referenced bun
-        raise NotImplementedError()
+        if not self.bun_class_exists(bun):
+            raise DatabaseError('Bun class does not exist')
+        with self.get_read_write_session() as session:
+            entry = session.get(BunClassEntry, bun)
+            entry.mett = amount
 
     def change_bun_price(self, bun, price):
         # set mett price for referenced bun
-        raise NotImplementedError()
+        if not self.bun_class_exists(bun):
+            raise DatabaseError('Bun class does not exist')
+        with self.get_read_write_session() as session:
+            entry = session.get(BunClassEntry, bun)
+            entry.price = price
 
     def assign_spare(self, bun_class, user):
         raise NotImplementedError()
@@ -305,11 +334,23 @@ class MettInterface(SQLDatabase):
 
     def get_current_bun_order(self):
         # get aggregated current bun order
-        raise NotImplementedError()
+        if not self.active_order_exists():
+            raise DatabaseError('No active order')
+        bun_order = {bun_class: 0 for bun_class in self.list_bun_classes()}
+        with self.get_read_write_session() as session:
+            order = self._get_current_order(session)
+            for bun in order.buns:
+                bun_order[bun.bun] += 1
+        return bun_order
 
-    def get_current_mett_order(self):
+
+    def get_current_mett_order(self) -> float:
         # generate mett order from bun order
-        raise NotImplementedError()
+        if not self.active_order_exists():
+            raise DatabaseError('No active order')
+        with self.get_read_write_session() as session:
+            order = self._get_current_order(session)
+            return sum(bun.mett for bun in [session.get(BunClassEntry, bun.bun) for bun in order.buns])
 
     def list_bun_classes_with_price(self) -> dict:
         raise NotImplementedError()
