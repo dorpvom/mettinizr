@@ -275,19 +275,19 @@ class MettInterface(SQLDatabase):
         return self.get_user(id)
 
     def find_role(self, role):
-        raise NotImplementedError()
+        raise NotImplementedError()  # Will stay un-implemented. flask-security artifact
 
     def toggle_active(self, user):
-        raise NotImplementedError()
+        raise NotImplementedError()  # Will stay un-implemented. flask-security artifact
 
     def deactivate_user(self, user):
-        raise NotImplementedError()
+        raise NotImplementedError()  # Will stay un-implemented. flask-security artifact
 
     def activate_user(self, user):
-        raise NotImplementedError()
+        raise NotImplementedError()  # Will stay un-implemented. flask-security artifact
 
     def find_or_create_role(self, name, **kwargs):
-        raise NotImplementedError()
+        raise NotImplementedError()  # Will stay un-implemented. flask-security artifact
 
     def delete_user(self, user: str):
         if not self.user_exists(user):
@@ -296,7 +296,7 @@ class MettInterface(SQLDatabase):
             session.execute(delete(UserEntry).where(UserEntry.name == user))
 
     def commit(self):
-        pass
+        pass  # Will stay un-implemented. flask-security artifact
 
     def get_deposits(self):
         raise NotImplementedError()
@@ -342,7 +342,6 @@ class MettInterface(SQLDatabase):
             for bun in order.buns:
                 bun_order[bun.bun] += 1
         return bun_order
-
 
     def get_current_mett_order(self) -> float:
         # generate mett order from bun order
