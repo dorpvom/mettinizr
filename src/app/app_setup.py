@@ -71,7 +71,7 @@ class AppSetup:
 
         self.user_interface = add_flask_security_to_app(self.app, self.config)
 
-        self.mett_store = MettInterface(config=self.config)
+        self.mett_store = self.user_interface
 
         OrderRoutes(self.app, self.config, self.mett_store)
         DashboardRoutes(self.app, self.config, self.mett_store)

@@ -179,6 +179,9 @@ class MettInterface(SQLDatabase):
 
     def change_balance(self, account, amount, admin):
         # Store which admin has allowed the balance change
+        # FIXME Bring back deposit link
+        if not self.user_exists(account):
+            raise DatabaseError('User does not exist')
         with self.get_read_write_session() as session:
             user = session.get(UserEntry, account)
             user.balance += amount
@@ -189,7 +192,7 @@ class MettInterface(SQLDatabase):
             accounts = session.scalars(select(UserEntry).order_by(UserEntry.name)).all()
             return [account.name for account in accounts]
 
-    def state_purchase(self, account, amount, purpose):
+    def state_purchase(self, account, amount, purpose) -> str:
         # add account, amount, purpose as non-processed purchase
         with self.get_read_write_session() as session:
             entry = PurchaseEntry(
@@ -201,7 +204,7 @@ class MettInterface(SQLDatabase):
             )
             session.add(entry)
 
-    def list_purchases(self, processed):
+    def list_purchases(self, processed: bool = False):
         # list purchases, if processed is false only those that have not been authorized or declined
         with self.get_read_write_session() as session:
             purchases = session.scalars(select(PurchaseEntry)).all()
@@ -299,7 +302,16 @@ class MettInterface(SQLDatabase):
         pass  # Will stay un-implemented. flask-security artifact
 
     def get_deposits(self):
-        raise NotImplementedError()
+        with self.get_read_write_session() as session:
+            deposits = session.scalars(select(DepositEntry)).all()
+            return [
+                {
+                    'amount': deposit['amount'],
+                    'user': deposit['user'],
+                    'admin': deposit['admin'],
+                    'timestamp': deposit['timestamp']
+                } for deposit in deposits
+            ]
 
     def change_mett_formula(self, bun: str, amount: float):
         # set mett amount for referenced bun
@@ -330,17 +342,24 @@ class MettInterface(SQLDatabase):
 
     def get_current_user_buns(self, user):
         # get list of buns ordered by user
-        raise NotImplementedError()
+        if not self.user_exists(user):
+            raise DatabaseError('User does not exist')
+        return self._get_bun_order(lambda x: x == user)
 
     def get_current_bun_order(self):
         # get aggregated current bun order
+        # FIXME Reintroduce spares
+        return self._get_bun_order(lambda _: True)
+
+    def _get_bun_order(self, user_filter) -> dict:
         if not self.active_order_exists():
             raise DatabaseError('No active order')
-        bun_order = {bun_class: 0 for bun_class in self.list_bun_classes()}
         with self.get_read_write_session() as session:
+            bun_order = {bun_class: 0 for bun_class in self.list_bun_classes()}
             order = self._get_current_order(session)
             for bun in order.buns:
-                bun_order[bun.bun] += 1
+                if user_filter(bun.account):
+                    bun_order[bun.bun] += 1
         return bun_order
 
     def get_current_mett_order(self) -> float:
@@ -352,10 +371,19 @@ class MettInterface(SQLDatabase):
             return sum(bun.mett for bun in [session.get(BunClassEntry, bun.bun) for bun in order.buns])
 
     def list_bun_classes_with_price(self) -> dict:
-        raise NotImplementedError()
+        with self.get_read_write_session() as session:
+            return {bun.name: bun.price for bun in session.scalars(select(BunClassEntry)).all()}
+
+    def list_bun_classes_with_mett(self) -> dict:
+        with self.get_read_write_session() as session:
+            return {bun.name: bun.mett for bun in session.scalars(select(BunClassEntry)).all()}
 
     def get_all_order_information(self) -> list:
-        raise NotImplementedError()
+        with self.get_read_write_session() as session:
+            return [
+                {'_id': order._id, 'orders': [(bun.account, bun.bun) for bun in order.buns]}
+                for order in session.scalars(select(OrderEntry)).all()
+            ]
 
 
 def password_is_legal(password: str) -> bool:

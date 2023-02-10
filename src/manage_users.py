@@ -41,27 +41,20 @@ class Actions:
         )
 
     @staticmethod
-    def _user_exists(user_store, mett_store, name):
-        return user_store.user_exists(name) or mett_store.account_exists(name)
-
-    @staticmethod
-    def create_user(interface, mett_store, app):
+    def create_user(interface, app):
         user = get_input('username: ')
-        if Actions._user_exists(interface, mett_store, user):
+        if interface.user_exists(user):
             raise DatabaseError('user must not exist')
 
         password = getpass.getpass('password: ')
         if not password_is_legal(password):
             raise DatabaseError('password is illegal')
 
-        if not mett_store.account_exists(user):
-            mett_store.create_account(user)
-
         with app.app_context():
             interface.create_user(name=user, password=password)
 
     @staticmethod
-    def create_role(interface, *_):
+    def create_role(interface, _):
         role = get_input('role name: ')
         if interface.role_exists(role):
             raise DatabaseError('role must not exist')
@@ -69,9 +62,9 @@ class Actions:
         interface.create_role(name=role)
 
     @staticmethod
-    def add_role_to_user(interface, mett_store, _):
+    def add_role_to_user(interface, _):
         user = get_input('username: ')
-        if not Actions._user_exists(interface, mett_store, user):
+        if not interface.user_exists(user):
             raise DatabaseError('user must exists before adding it to role')
 
         role = get_input('role name: ')
@@ -81,9 +74,9 @@ class Actions:
         interface.add_role_to_user(user=user, role=role)
 
     @staticmethod
-    def remove_role_from_user(interface, mett_store, _):
+    def remove_role_from_user(interface, _):
         user = get_input('username: ')
-        if not Actions._user_exists(interface, mett_store, user):
+        if not interface.user_exists(user):
             raise DatabaseError('user must exists before removing role from it')
 
         role = get_input('role name: ')
@@ -93,9 +86,9 @@ class Actions:
         interface.remove_role_from_user(user=user, role=role)
 
     @staticmethod
-    def delete_user(interface, mett_store, _):
+    def delete_user(interface, _):
         user = get_input('username: ')
-        if not Actions._user_exists(interface, mett_store, user):
+        if not interface.user_exists(user):
             raise DatabaseError('user must exists before deleting it')
 
         interface.delete_user(user=user)
@@ -127,7 +120,7 @@ def prompt_for_actions(app_setup):
         else:
             try:
                 acting_function = getattr(Actions, action)
-                acting_function(app_setup.user_interface, app_setup.mett_store, app_setup.app)
+                acting_function(app_setup.user_interface, app_setup.app)
             except (DatabaseError, ValueError) as error:
                 print('error: {}'.format(error))
             except EOFError:

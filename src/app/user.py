@@ -41,7 +41,7 @@ class UserRoutes:
             flash(str(error), 'danger')
             users = []
 
-        return render_template('user.html', users=users, existing_roles=[role['name'] for role in self._user_interface.list_roles()])
+        return render_template('user.html', users=users, existing_roles=self._user_interface.list_roles())
 
     @roles_accepted('admin')
     def _delete_user(self, name):
@@ -49,7 +49,6 @@ class UserRoutes:
             admin = current_user.name if not current_user.is_anonymous else 'anonymous'
             balance = self._mett_store.get_balance(name)
             self._mett_store.change_balance(name, -balance, admin)
-            self._mett_store.delete_account(name)
             self._user_interface.delete_user(name)
         except DatabaseError as error:
             flash(str(error), 'warning')
@@ -77,8 +76,6 @@ class UserRoutes:
 
             self._user_interface.create_user(name=request.form['new_user'], password=request.form['new_password'])
             self._user_interface.add_role_to_user(user=request.form['new_user'], role=self._config.get('User', 'default_role'))
-
-            self._mett_store.create_account(request.form['new_user'])
 
         except (DatabaseError, ValueError) as error:
             flash(str(error), 'warning')

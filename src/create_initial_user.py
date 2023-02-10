@@ -4,8 +4,6 @@ from app.app_setup import AppSetup
 
 
 def create_init_user(app_setup):
-    app_setup.mett_store.create_account('init')
-
     with app_setup.app.app_context():
         app_setup.user_interface.create_user(name='init', password='init')
     app_setup.user_interface.create_role(name='admin')

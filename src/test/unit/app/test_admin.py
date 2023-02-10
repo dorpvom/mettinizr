@@ -1,136 +1,132 @@
-from test.unit.common import MockUser, HAS_EXPIRED, HAS_NOT_EXPIRED
+from test.unit.common import TestUser, HAS_EXPIRED, HAS_NOT_EXPIRED
 
 
-def test_admin_home(mock_app, app_fixture):
-    response = mock_app.get('/admin')
+def test_admin_home(client, app):
+    response = client.get('/admin')
     assert b'Create order' in response.data
 
-    app_fixture.mett_store.create_order(HAS_NOT_EXPIRED)
+    app.mett_store.create_order(HAS_NOT_EXPIRED)
 
-    response = mock_app.get('/admin')
+    response = client.get('/admin')
     assert b'Close order' in response.data
 
 
-def test_increase_balance(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
+def test_increase_balance(client, app):
+    response = client.get('/admin/balance')
+    assert TestUser.name.encode() in response.data
+    assert app.mett_store.get_balance(TestUser.name) == 0.0
 
-    response = mock_app.get('/admin/balance')
-    assert MockUser.name.encode() in response.data
-    assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 0.0
-
-    response = mock_app.post('/admin/balance', data={'username': MockUser.name, 'added': 1.37})
+    response = client.post('/admin/balance', data={'username': TestUser.name, 'added': 1.37})
     assert response.status_code == 200
-    assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 1.37
+    assert app.mett_store.get_balance(TestUser.name) == 1.37
 
 
-def test_decrease_balance(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
+def test_decrease_balance(client, app):
+    response = client.get('/admin/balance')
+    assert TestUser.name.encode() in response.data
+    assert app.mett_store.get_balance(TestUser.name) == 0.0
 
-    response = mock_app.get('/admin/balance')
-    assert MockUser.name.encode() in response.data
-    assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 0.0
-
-    response = mock_app.post('/admin/balance', data={'username': MockUser.name, 'removed': 1.37})
+    response = client.post('/admin/balance', data={'username': TestUser.name, 'removed': 1.37})
     assert response.status_code == 200
-    assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == -1.37
+    assert app.mett_store.get_balance(TestUser.name) == -1.37
 
 
-def test_create_order_expired(mock_app, app_fixture):
-    response = mock_app.post('/admin', data={'expiry': HAS_EXPIRED})
+def test_create_order_expired(client, app):
+    response = client.post('/admin', data={'expiry': HAS_EXPIRED})
     assert response.status_code == 200
     assert 'enter date that has' in response.data.decode()
 
 
-def test_create_order_exists(mock_app, app_fixture):
-    app_fixture.mett_store.create_order(HAS_NOT_EXPIRED)
-    response = mock_app.post('/admin', data={'expiry': HAS_NOT_EXPIRED})
+def test_create_order_exists(client, app):
+    app.mett_store.create_order(HAS_NOT_EXPIRED)
+    response = client.post('/admin', data={'expiry': HAS_NOT_EXPIRED})
     assert response.status_code == 200
     assert b'while another one is active' in response.data
 
 
-def test_create_order_success(mock_app, app_fixture):
-    response = mock_app.post('/admin', data={'expiry': HAS_NOT_EXPIRED})
+def test_create_order_success(client, app):
+    response = client.post('/admin', data={'expiry': HAS_NOT_EXPIRED})
     assert response.status_code == 200
     assert not 'enter date that has' in response.data.decode()
-    assert app_fixture.mett_store.active_order_exists()
+    assert app.mett_store.active_order_exists()
 
 
-def test_close_order(mock_app, app_fixture):
-    app_fixture.mett_store.create_order(HAS_NOT_EXPIRED)
+def test_close_order(client, app):
+    app.mett_store.create_order(HAS_NOT_EXPIRED)
 
-    assert app_fixture.mett_store.active_order_exists()
-    response = mock_app.get('/admin/close_order')
+    assert app.mett_store.active_order_exists()
+    response = client.get('/admin/close_order')
     assert response.status_code == 200
-    assert not app_fixture.mett_store.active_order_exists()
+    assert not app.mett_store.active_order_exists()
 
 
-def test_cancel_order(mock_app, app_fixture):
-    app_fixture.mett_store.create_order(HAS_NOT_EXPIRED)
+def test_cancel_order(client, app):
+    app.mett_store.create_order(HAS_NOT_EXPIRED)
 
-    assert app_fixture.mett_store.active_order_exists()
-    response = mock_app.get('/admin/cancel_order')
+    assert app.mett_store.active_order_exists()
+    response = client.get('/admin/cancel_order')
     assert response.status_code == 200
-    assert not app_fixture.mett_store.active_order_exists()
+    assert not app.mett_store.active_order_exists()
 
 
-def test_change_mett_formula(mock_app, app_fixture):
-    assert app_fixture.mett_store._buns.find_one({'bun_class': 'Weizen'})['price'] == 1.0
-    response = mock_app.post('/admin/formula', data={'price': 2.0, 'bun': 'Weizen'})
+def test_change_mett_formula(client, app):
+    assert app.mett_store.list_bun_classes_with_price()['Weizen'] == 1.0
+    response = client.post('/admin/formula', data={'price': 2.0, 'bun': 'Weizen'})
     assert response.status_code == 200
-    assert app_fixture.mett_store._buns.find_one({'bun_class': 'Weizen'})['price'] == 2.0
+    assert app.mett_store.list_bun_classes_with_price()['Weizen'] == 2.0
 
-    assert app_fixture.mett_store._buns.find_one({'bun_class': 'Weizen'})['mett'] == 66.0
-    response = mock_app.post('/admin/formula', data={'amount': 80.0, 'bun': 'Weizen'})
+    assert app.mett_store.list_bun_classes_with_mett()['Weizen'] == 66.0
+    response = client.post('/admin/formula', data={'amount': 80.0, 'bun': 'Weizen'})
     assert response.status_code == 200
-    assert app_fixture.mett_store._buns.find_one({'bun_class': 'Weizen'})['mett'] == 80.0
+    assert app.mett_store.list_bun_classes_with_mett()['Weizen'] == 80.0
 
-    response = mock_app.post('/admin/formula', data={})
+    response = client.post('/admin/formula', data={})
     assert b'Empty request' in response.data
 
 
-def test_show_spare_page(mock_app):
-    response = mock_app.get('/admin/spare')
+def test_show_spare_page(client):
+    response = client.get('/admin/spare')
     assert response.status_code == 200
     assert b'Weizen' in response.data
 
 
-def test_assign_spare(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
-    app_fixture.mett_store._book_money(MockUser.name, 10.0)
-    assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 10.0
+def test_assign_spare(client, app):
+    app.mett_store._book_money(TestUser.name, 10.0)
+    assert app.mett_store.get_balance(TestUser.name) == 10.0
 
-    response = mock_app.post('/admin/spare', data={'bun': 'Weizen', 'username': MockUser.name})
+    response = client.post('/admin/spare', data={'bun': 'Weizen', 'username': TestUser.name})
     assert response.status_code == 200
-    assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 9.0
+    assert app.mett_store.get_balance(TestUser.name) == 9.0
 
 
-def test_list_purchases(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
-    app_fixture.mett_store.state_purchase(MockUser.name, 1.23, 'testing purposes')
+def test_list_purchases(client, app):
+    app.mett_store.state_purchase(TestUser.name, 1.23, 'testing purposes')
 
-    response = mock_app.get('/admin/purchase')
+    response = client.get('/admin/purchase')
     assert b'testing purposes' in response.data
 
 
-def test_decline_purchase(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
-    purchase_id = app_fixture.mett_store.state_purchase(MockUser.name, 1.23, 'testing purposes')
+def test_decline_purchase(client, app, monkeypatch):
+    monkeypatch.setattr('app.admin.current_user', TestUser())
+    app.mett_store.state_purchase(TestUser.name, 1.23, 'testing purposes')
+    purchase = app.mett_store.list_purchases()[0]
 
-    assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 0.0
-    response = mock_app.get('/admin/purchase/decline/{}'.format(purchase_id))
+    assert app.mett_store.get_balance(TestUser.name) == 0.0
+    response = client.get('/admin/purchase/decline/{}'.format(purchase.p_id))
     assert response.status_code == 200
-    assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 0.0
-    assert b'table-danger' in mock_app.get('/admin/purchase').data
-    assert b'table-success' not in mock_app.get('/admin/purchase').data
+    assert app.mett_store.get_balance(TestUser.name) == 0.0
+    assert b'table-danger' in client.get('/admin/purchase').data
+    assert b'table-success' not in client.get('/admin/purchase').data
 
 
-def test_authorize_purchase(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
-    purchase_id = app_fixture.mett_store.state_purchase(MockUser.name, 1.23, 'testing purposes')
+def test_authorize_purchase(client, app, monkeypatch):
+    monkeypatch.setattr('app.admin.current_user', TestUser())
+    app.mett_store.state_purchase(TestUser.name, 1.23, 'testing purposes')
+    purchase = app.mett_store.list_purchases()[0]
 
-    assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 0.0
-    response = mock_app.get('/admin/purchase/authorize/{}'.format(purchase_id))
+    assert app.mett_store.get_balance(TestUser.name) == 0.0
+    response = client.get('/admin/purchase/authorize/{}'.format(purchase.p_id))
     assert response.status_code == 200
-    assert app_fixture.mett_store.get_account_information(MockUser.name)['balance'] == 1.23
-    assert b'table-success' in mock_app.get('/admin/purchase').data
-    assert b'table-danger' not in mock_app.get('/admin/purchase').data
+    assert app.mett_store.get_balance(TestUser.name) == 1.23
+    assert b'table-success' in client.get('/admin/purchase').data
+    assert b'table-danger' not in client.get('/admin/purchase').data

@@ -70,8 +70,8 @@ class AdminRoutes:
     def _list_purchases(self):
         purchases = self._mett_store.list_purchases(processed=True)
 
-        processed = [purchase for purchase in purchases if purchase['processed']['by']]
-        unprocessed = [purchase for purchase in purchases if not purchase['processed']['by']]
+        processed = [purchase for purchase in purchases if purchase.processed['by'] is not None]
+        unprocessed = [purchase for purchase in purchases if not purchase.processed['by']]
 
         return render_template('admin/purchase.html', processed=processed, unprocessed=unprocessed)
 

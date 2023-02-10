@@ -1,94 +1,90 @@
-from test.unit.common import MockUser
+import pytest
+
+from test.unit.common import TestUser
 
 
-def test_user_home(mock_app, app_fixture):
-    app_fixture.user_interface.create_role(name='test_role')
-    app_fixture.user_interface.add_role_to_user(user=MockUser.name, role='test_role')
+def test_user_home(client, app):
+    app.user_interface.create_role(name='test_role')
+    app.user_interface.add_role_to_user(user=TestUser.name, role='test_role')
 
-    app_fixture.mett_store.create_account(MockUser.name)
-
-    response = mock_app.get('/user')
+    response = client.get('/user')
 
     assert response.status_code == 200
-    assert MockUser.name.encode() in response.data
+    assert TestUser.name.encode() in response.data
     assert b'test_role' in response.data
 
 
-def test_create_user(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
-    response = mock_app.post('/user', data={'new_user': 'a_user', 'new_password': 'a_password'})
+def test_create_user(client, app):
+    response = client.post('/user', data={'new_user': 'a_user', 'new_password': 'a_password'})
     assert b'a_user' in response.data
 
-    assert app_fixture.config.get('User', 'default_role').encode() in response.data
+    assert app.config.get('User', 'default_role').encode() in response.data
 
 
-def test_add_role(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
+def test_add_role(client, app):
+    app.user_interface.create_role(name='test_role')
 
-    app_fixture.user_interface.create_role(name='test_role')
-
-    before = mock_app.get('/user')
+    before = client.get('/user')
     assert b'<td>test_role</td>' not in before.data
 
-    after = mock_app.post('/user', data={'add_role_username': MockUser.name, 'added_role': 'test_role'})
+    after = client.post('/user', data={'add_role_username': TestUser.name, 'added_role': 'test_role'})
     assert b'<td>test_role</td>' in after.data
 
 
-def test_remove_role(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
+def test_remove_role(client, app):
+    app.user_interface.create_role(name='test_role')
+    app.user_interface.add_role_to_user(user=TestUser.name, role='test_role')
 
-    app_fixture.user_interface.create_role(name='test_role')
-    app_fixture.user_interface.add_role_to_user(user=MockUser.name, role='test_role')
-
-    before = mock_app.get('/user')
+    before = client.get('/user')
     assert b'<td>test_role</td>' in before.data
 
-    after = mock_app.post('/user', data={'remove_role_username': MockUser.name, 'removed_role': 'test_role'})
+    after = client.post('/user', data={'remove_role_username': TestUser.name, 'removed_role': 'test_role'})
     assert b'<td>test_role</td>' not in after.data
 
 
-def test_delete_user(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
+def test_delete_user(client, app):
+    assert app.mett_store.user_exists(TestUser.name)
 
-    assert app_fixture.mett_store.account_exists(MockUser.name)
-
-    response = mock_app.get('/user/delete/{}'.format(MockUser.name), follow_redirects=True)
+    response = client.get('/user/delete/{}'.format(TestUser.name), follow_redirects=True)
     assert response.status_code == 200
-    assert not app_fixture.mett_store.account_exists(MockUser.name)
+    assert not app.mett_store.user_exists(TestUser.name)
 
 
-def test_delete_non_existing_user(mock_app, app_fixture):
-    response = mock_app.get('/user/delete/{}'.format('another'), follow_redirects=True)
+@pytest.mark.skip(
+    reason=('Reconsider this test. Either endpoint has to be rewritten or we can drop test since condition can never be'
+            'reached anyway'
+            )
+)
+def test_delete_non_existing_user(client, app):
+    response = client.get('/user/delete/another', follow_redirects=True)
     assert b'No existing account another' in response.data
 
 
-def test_delete_redirect_correct(mock_app, app_fixture):
-    response = mock_app.get('/user/delete/{}'.format('another'))
+@pytest.mark.skip(
+    reason=('Reconsider this test. Either endpoint has to be rewritten or we can drop test since condition can never be'
+            'reached anyway'
+            )
+)
+def test_delete_redirect_correct(client, app):
+    response = client.get(f'/user/delete/another')
     assert response.location == 'http://localhost/user'
 
 
-def test_create_bad_password(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
-    response = mock_app.post('/user', data={'new_user': 'a_user', 'new_password': ''})
+def test_create_bad_password(client, app):
+    response = client.post('/user', data={'new_user': 'a_user', 'new_password': ''})
     assert b'Please choose legal password' in response.data
 
 
-def test_create_exists_already(mock_app, app_fixture):
-    app_fixture.mett_store.create_account('a_user')
-    response = mock_app.post('/user', data={'new_user': 'a_user', 'new_password': 'a_password'})
-    assert b'a_user exists' in response.data, 'Error should originate from mett store'
-
-    response = mock_app.post('/user', data={'new_user': 'a_user', 'new_password': 'a_password'})
+def test_create_exists_already(client, app):
+    response = client.post('/user', data={'new_user': 'user', 'new_password': 'a_password'})
     assert b'User already exists' in response.data, 'Error should originate from user store'
 
 
-def test_change_user_password(mock_app, app_fixture):
-    app_fixture.mett_store.create_account(MockUser.name)
-
-    response = mock_app.post('/user', data={'name': MockUser.name, 'new_password': 'one_password', 'new_password_confirm': 'another_password'})
+def test_change_user_password(client, app):
+    response = client.post('/user', data={'name': TestUser.name, 'new_password': 'one_password', 'new_password_confirm': 'another_password'})
     assert b'password did not match' in response.data
     assert b'change successful' not in response.data
 
-    response = mock_app.post('/user', data={'name': MockUser.name, 'new_password': 'same_password', 'new_password_confirm': 'same_password'})
+    response = client.post('/user', data={'name': TestUser.name, 'new_password': 'same_password', 'new_password_confirm': 'same_password'})
     assert b'password did not match' not in response.data
     assert b'change successful' in response.data

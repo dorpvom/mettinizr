@@ -39,7 +39,7 @@ class OrderRoutes:
             self._mett_store.state_purchase(current_user.name, float(transaction['amount']), transaction['purpose'])
 
             allowed_to_order, bun_classes, buns, mett, order_exists = self._prepare_data_for_order_page()
-            return render_template('order.html', allowed_to_order=allowed_to_order, bun_classes=self._mett_store.list_bun_classes(), order_exists=order_exists, buns=buns, mett=mett)
+            return render_template('order.html', allowed_to_order=allowed_to_order, bun_classes=bun_classes, order_exists=order_exists, buns=buns, mett=mett)
 
         return render_template('order/purchase.html')
 
