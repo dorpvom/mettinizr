@@ -337,8 +337,25 @@ class MettInterface(SQLDatabase):
         raise NotImplementedError()
 
     def get_order_history(self, user):
-        # get list of (order_id, orders) where orders is slice of orders ordered by account
-        raise NotImplementedError()
+        # TODO Please refactor
+        # get average per bun and average total of a user's orders (that she / he participated in)
+        with self.get_read_write_session() as session:
+            orders = session.scalars(select(OrderEntry).where(OrderEntry.processed == True)).all()
+            user_has_ordered, flag = 0, False
+            order = {bun_class: 0 for bun_class in self.list_bun_classes()}
+            for former_order in orders:
+                for ordered_bun in former_order.buns:
+                    if ordered_bun.account == user:
+                        order[ordered_bun.bun] += 1
+                        flag = True
+                if flag:
+                    user_has_ordered += 1
+                    flag = False
+            if user_has_ordered > 0:
+                for bun_class in order:
+                    order[bun_class] = order[bun_class] / user_has_ordered
+            mean_over_all = sum(order[bun] for bun in order)
+            return order, mean_over_all
 
     def get_current_user_buns(self, user):
         # get list of buns ordered by user

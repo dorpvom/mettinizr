@@ -246,3 +246,19 @@ def test_get_all_order_information(interface):
     interface.order_bun(TestUser.name, 'Weizen')
     order = interface.get_all_order_information()
     assert order[0]['orders'] == [(TestUser.name, 'Weizen')]
+
+
+def test_order_history(interface):
+    interface.create_order(HAS_NOT_EXPIRED)
+    interface.order_bun(TestUser.name, 'Weizen')
+    interface.order_bun(TestUser.name, 'Weizen')
+    interface.order_bun(TestUser.name, 'Roggen')
+    interface.process_order()
+
+    interface.create_order(HAS_NOT_EXPIRED)
+    interface.order_bun(TestUser.name, 'Weizen')
+    interface.order_bun(TestUser.name, 'Roggen')
+    interface.order_bun(TestUser.name, 'Roggen')
+    interface.process_order()
+
+    assert interface.get_order_history(TestUser.name) == ({'Weizen': 1.5, 'Roggen': 1.5}, 3)
