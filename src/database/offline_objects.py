@@ -1,11 +1,18 @@
 from collections import namedtuple
 
-'''
-    _id = Column(Integer, primary_key=True)
-    account = Column(VARCHAR, ForeignKey('user.name'))
-    bun = Column(VARCHAR, ForeignKey('bun_class.name'))
-    order = Column(Integer, ForeignKey('order._id'))
-'''
+from flask_login import UserMixin
+
+Role = namedtuple('Role', ['name'])
+
+
+class SecurityUser(UserMixin):
+    def __init__(self, name, password, roles):
+        self.name = name
+        self.password = password
+        self.roles = [Role(name=role) for role in roles]
+
+        self.id = self.name
+
 
 Purchase = namedtuple('Purchase', ['p_id', 'account', 'price', 'purpose', 'timestamp', 'processed'])
 Order = namedtuple('Order', ['processed', 'expiry_date', 'buns'])

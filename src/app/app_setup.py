@@ -12,8 +12,6 @@ from app.profile import ProfileRoutes
 from app.security.authentication import add_flask_security_to_app
 from app.user import UserRoutes
 
-from database.interface import MettInterface
-
 
 class Filter:
     def __init__(self, app, config):

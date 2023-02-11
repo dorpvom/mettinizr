@@ -81,7 +81,7 @@ def test_create_expired_order_fails(database):
 def test_create_order(database):
     assert not database.active_order_exists()
 
-    database.create_order(expiry_date='2023-02-10')
+    database.create_order(expiry_date='2050-02-10')
 
     assert database.active_order_exists()
     assert not database.current_order_is_expired()

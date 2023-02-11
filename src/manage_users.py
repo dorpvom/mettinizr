@@ -4,7 +4,7 @@ import getpass
 import sys
 
 from app.app_setup import AppSetup
-from database.user_store import password_is_legal
+from database.interface import password_is_legal
 
 
 class DatabaseError(Exception):
