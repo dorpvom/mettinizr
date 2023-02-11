@@ -15,6 +15,7 @@ def config_for_tests():
     config.set('Runtime', 'testing', 'true')
     config.set('Database', 'database_path', ':memory:')
     config.set('Mett', 'default_buns', 'Weizen, Roggen')
+    config.set('Mett', 'half_buns', '')
     return config
 
 
@@ -35,7 +36,6 @@ def combined_app(app, interface):
     app.user_interface = interface
     app.mett_store = interface
     return app
-
 
 
 @pytest.fixture(scope='function')

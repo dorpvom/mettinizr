@@ -91,7 +91,7 @@ def test_show_spare_page(client):
 
 
 def test_assign_spare(client, app):
-    app.mett_store._book_money(TestUser.name, 10.0)
+    app.mett_store.change_balance(TestUser.name, 10.0, TestUser.name)
     assert app.mett_store.get_balance(TestUser.name) == 10.0
 
     response = client.post('/admin/spare', data={'bun': 'Weizen', 'username': TestUser.name})

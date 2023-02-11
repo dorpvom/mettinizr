@@ -21,7 +21,13 @@ class MettInterface(SQLDatabase):
     def initialize_bun_classes(self):
         with self.get_read_write_session() as session:
             if not self.list_bun_classes():
-                for bun in self.config.get('Mett', 'default_buns').split(','):
+                half_buns = get_bun_names(self.config.get('Mett', 'half_buns'))
+                if len(half_buns) > 1:
+                    raise DatabaseError('Please define only one or none half bun in config')
+                normal_buns = get_bun_names(self.config.get('Mett', 'default_buns'))
+                if self.config.get('Mett', 'default_spare') not in normal_buns:
+                    raise DatabaseError('Please select a default spare from default (not-half) buns')
+                for bun in half_buns + normal_buns:
                     bun_entry = BunClassEntry(
                         name=bun.strip(),
                         price=self.config.getfloat('Mett', 'default_price'),
@@ -330,11 +336,24 @@ class MettInterface(SQLDatabase):
             entry.price = price
 
     def assign_spare(self, bun_class, user):
-        raise NotImplementedError()
+        with self.get_read_write_session() as session:
+            self._charge_bun(session=session, account=user, bun=bun_class)
 
     def reroute_bun(self, bun_class, user, target):
         # Change order from one user to another
-        raise NotImplementedError()
+        user_buns = self.get_current_user_buns(user)
+        if user_buns[bun_class] == 0:
+            raise DatabaseError(f'No {bun_class} bun order by {user}')
+        with self.get_read_write_session() as session:
+            single_order = self._find_single_order(user, bun_class, session)
+            single_order.account = target
+
+    def _find_single_order(self, user, bun, session) -> SingleOrderEntry:
+        current_order = self._get_current_order(session)
+        for single_order in current_order.buns:
+            if single_order.bun == bun and single_order.account == user:
+                return single_order
+        raise DatabaseError('Could not find bun to re-route')
 
     def get_order_history(self, user):
         # TODO Please refactor
@@ -363,10 +382,21 @@ class MettInterface(SQLDatabase):
             raise DatabaseError('User does not exist')
         return self._get_bun_order(lambda x: x == user)
 
-    def get_current_bun_order(self):
+    def get_current_bun_order(self, include_spares: bool = True):
         # get aggregated current bun order
         # FIXME Reintroduce spares
-        return self._get_bun_order(lambda _: True)
+        current_bun_order = self._get_bun_order(lambda _: True)
+        return self._add_spares(current_bun_order) if include_spares else current_bun_order
+
+    def _add_spares(self, current_bun_order):
+        half_buns = get_bun_names(self.config.get('Mett', 'half_buns'))
+        spare_count = self.config.getint('Mett', 'spare_count')
+        if half_buns and (current_bun_order[half_buns[0]] % 2) == 1:
+            current_bun_order[half_buns[0]] += 1
+            current_bun_order[self.config.get('Mett', 'default_spare')] += spare_count - 1 if spare_count > 0 else 0
+            return current_bun_order
+        current_bun_order[self.config.get('Mett', 'default_spare')] += spare_count
+        return current_bun_order
 
     def _get_bun_order(self, user_filter) -> dict:
         if not self.active_order_exists():
@@ -381,6 +411,7 @@ class MettInterface(SQLDatabase):
 
     def get_current_mett_order(self) -> float:
         # generate mett order from bun order
+        # FIXME Include spares
         if not self.active_order_exists():
             raise DatabaseError('No active order')
         with self.get_read_write_session() as session:
@@ -409,3 +440,7 @@ def password_is_legal(password: str) -> bool:
     schemes = ['bcrypt', 'des_crypt', 'pbkdf2_sha256', 'pbkdf2_sha512', 'sha256_crypt', 'sha512_crypt', 'plaintext']
     ctx = CryptContext(schemes=schemes)
     return ctx.identify(password) == 'plaintext'
+
+
+def get_bun_names(csv_string: str) -> List[str]:
+    return [s for s in csv_string.split(',') if s]

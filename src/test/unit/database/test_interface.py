@@ -215,11 +215,11 @@ def test_get_current_bun_order(interface):
         interface.get_current_bun_order()
 
     interface.create_order(HAS_NOT_EXPIRED)
-    assert interface.get_current_bun_order() == {'Weizen': 0, 'Roggen': 0}
+    assert interface.get_current_bun_order(include_spares=False) == {'Weizen': 0, 'Roggen': 0}
     interface.order_bun(TestUser.name, 'Weizen')
     interface.order_bun(TestUser.name, 'Weizen')
     interface.order_bun(TestUser.name, 'Roggen')
-    assert interface.get_current_bun_order() == {'Weizen': 2, 'Roggen': 1}
+    assert interface.get_current_bun_order(include_spares=False) == {'Weizen': 2, 'Roggen': 1}
 
 
 def test_get_current_user_buns(interface, app):
