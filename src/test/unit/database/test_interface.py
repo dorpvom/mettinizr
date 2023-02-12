@@ -163,6 +163,9 @@ def test_authorize_purchase(interface):
     interface.authorize_purchase(purchase.p_id, TestUser.name)
     assert 13.5 >= interface.get_balance(TestUser.name) >= 13
 
+    assert not interface.list_purchases(processed=False)
+    assert interface.list_purchases(processed=True)
+
 
 def test_decline_purchase(interface):
     interface.state_purchase(TestUser.name, 13.37, 'mett order')

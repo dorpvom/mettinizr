@@ -182,20 +182,20 @@ class MettInterface(SQLDatabase):
 
     def change_balance(self, account, amount, admin):
         # Store which admin has allowed the balance change
-        # FIXME Bring back deposit link
-        if not self.user_exists(account):
+        if not self.user_exists(account) or not self.user_exists(admin):
             raise DatabaseError('User does not exist')
         with self.get_read_write_session() as session:
             user = session.get(UserEntry, account)
             user.balance += amount
-            session.commit()
+            deposit = DepositEntry(admin=admin, user=account, amount=amount, timestamp=datetime.now().date())
+            session.add(deposit)
 
     def list_accounts(self):
         with self.get_read_write_session() as session:
             accounts = session.scalars(select(UserEntry).order_by(UserEntry.name)).all()
             return [account.name for account in accounts]
 
-    def state_purchase(self, account, amount, purpose) -> str:
+    def state_purchase(self, account, amount, purpose):
         # add account, amount, purpose as non-processed purchase
         with self.get_read_write_session() as session:
             entry = PurchaseEntry(
@@ -210,7 +210,7 @@ class MettInterface(SQLDatabase):
     def list_purchases(self, processed: bool = False):
         # list purchases, if processed is false only those that have not been authorized or declined
         with self.get_read_write_session() as session:
-            purchases = session.scalars(select(PurchaseEntry)).all()
+            purchases = session.scalars(select(PurchaseEntry).where(PurchaseEntry.processed == processed)).all()
             return [
                 Purchase(
                     p_id=purchase._id,
