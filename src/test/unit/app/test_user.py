@@ -42,7 +42,9 @@ def test_remove_role(client, app):
     assert b'<td>test_role</td>' not in after.data
 
 
-def test_delete_user(client, app):
+def test_delete_user(client, app, monkeypatch):
+    monkeypatch.setattr('app.user.current_user', TestUser())
+
     assert app.mett_store.user_exists(TestUser.name)
 
     response = client.get('/user/delete/{}'.format(TestUser.name), follow_redirects=True)

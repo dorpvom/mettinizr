@@ -309,10 +309,10 @@ class MettInterface(SQLDatabase):
             deposits = session.scalars(select(DepositEntry)).all()
             return [
                 {
-                    'amount': deposit['amount'],
-                    'user': deposit['user'],
-                    'admin': deposit['admin'],
-                    'timestamp': deposit['timestamp']
+                    'amount': deposit.amount,
+                    'user': deposit.user,
+                    'admin': deposit.admin,
+                    'timestamp': deposit.timestamp
                 } for deposit in deposits
             ]
 
@@ -381,7 +381,6 @@ class MettInterface(SQLDatabase):
 
     def get_current_bun_order(self, include_spares: bool = True):
         # get aggregated current bun order
-        # FIXME Reintroduce spares
         current_bun_order = self._get_bun_order(lambda _: True)
         return self._add_spares(current_bun_order) if include_spares else current_bun_order
 
@@ -406,14 +405,16 @@ class MettInterface(SQLDatabase):
                     bun_order[bun.bun] += 1
         return bun_order
 
-    def get_current_mett_order(self) -> float:
+    def get_current_mett_order(self, include_spares: bool = True) -> float:
         # generate mett order from bun order
-        # FIXME Include spares
         if not self.active_order_exists():
             raise DatabaseError('No active order')
+        ordered_buns = self.get_current_bun_order(include_spares=include_spares)
         with self.get_read_write_session() as session:
-            order = self._get_current_order(session)
-            return sum(bun.mett for bun in [session.get(BunClassEntry, bun.bun) for bun in order.buns])
+            return sum(
+                bun.mett * count for bun, count in [
+                    (session.get(BunClassEntry, name), count) for name, count in ordered_buns.items()]
+            )
 
     def list_bun_classes_with_price(self) -> dict:
         with self.get_read_write_session() as session:

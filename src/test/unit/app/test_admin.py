@@ -11,7 +11,9 @@ def test_admin_home(client, app):
     assert b'Close order' in response.data
 
 
-def test_increase_balance(client, app):
+def test_increase_balance(client, app, monkeypatch):
+    monkeypatch.setattr('app.admin.current_user', TestUser())
+
     response = client.get('/admin/balance')
     assert TestUser.name.encode() in response.data
     assert app.mett_store.get_balance(TestUser.name) == 0.0
@@ -21,7 +23,9 @@ def test_increase_balance(client, app):
     assert app.mett_store.get_balance(TestUser.name) == 1.37
 
 
-def test_decrease_balance(client, app):
+def test_decrease_balance(client, app, monkeypatch):
+    monkeypatch.setattr('app.admin.current_user', TestUser())
+
     response = client.get('/admin/balance')
     assert TestUser.name.encode() in response.data
     assert app.mett_store.get_balance(TestUser.name) == 0.0

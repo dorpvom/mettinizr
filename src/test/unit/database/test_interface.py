@@ -1,3 +1,5 @@
+from math import isclose
+
 import pytest
 
 from database.database import DatabaseError
@@ -153,7 +155,7 @@ def test_state_purchase(interface):
     interface.state_purchase(TestUser.name, 13.37, 'mett order')
     purchase = interface.list_purchases(False)[0]
     assert purchase.account == TestUser.name
-    assert 13.5 >= purchase.price >= 13
+    assert isclose(purchase.price, 13.37)
 
 
 def test_authorize_purchase(interface):
@@ -161,7 +163,7 @@ def test_authorize_purchase(interface):
     purchase = interface.list_purchases(False)[0]
     assert interface.get_balance(TestUser.name) == 0
     interface.authorize_purchase(purchase.p_id, TestUser.name)
-    assert 13.5 >= interface.get_balance(TestUser.name) >= 13
+    assert isclose(interface.get_balance(TestUser.name), 13.37)
 
     assert not interface.list_purchases(processed=False)
     assert interface.list_purchases(processed=True)
@@ -210,7 +212,7 @@ def test_change_mett_amount(interface):
 
     interface.change_mett_formula('Weizen', 121.1)
     interface.order_bun(TestUser.name, 'Weizen')
-    assert interface.get_current_mett_order() == 121.1
+    assert isclose(interface.get_current_mett_order(include_spares=False), 121.1)
 
 
 def test_get_current_bun_order(interface):
