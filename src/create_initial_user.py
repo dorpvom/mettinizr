@@ -4,6 +4,8 @@ from app.app_setup import AppSetup
 
 
 def create_init_user(app_setup):
+    app_setup.user_interface.create_tables()
+
     with app_setup.app.app_context():
         app_setup.user_interface.create_user(
             name=app_setup.config.get('Database', 'default_user'),
