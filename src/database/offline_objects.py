@@ -1,8 +1,12 @@
 from collections import namedtuple
 
-from flask_login import UserMixin
+from flask_security import UserMixin, RoleMixin
 
-Role = namedtuple('Role', ['name'])
+
+class Role(RoleMixin):
+    def __init__(self, name):
+        self.name = name
+        super().__init__()
 
 
 class SecurityUser(UserMixin):
@@ -10,6 +14,8 @@ class SecurityUser(UserMixin):
         self.name = name
         self.password = password
         self.roles = [Role(name=role) for role in roles]
+        self.active = True
+        self.fs_uniquifier = name
 
         self.id = self.name
 

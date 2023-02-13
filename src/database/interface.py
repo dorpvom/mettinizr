@@ -277,8 +277,9 @@ class MettInterface(SQLDatabase):
             entry = session.get(UserEntry, user_name)
             entry.password = hash_password(password)
 
-    def find_user(self, id):
-        return self.get_user(id)
+    def find_user(self, email: str = None, fs_uniquifier: str = None, *_, **__):
+        identifier = email.split('@')[0] if email else fs_uniquifier
+        return self.get_user(identifier)
 
     def find_role(self, role):
         raise NotImplementedError()  # Will stay un-implemented. flask-security artifact

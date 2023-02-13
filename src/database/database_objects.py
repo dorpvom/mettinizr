@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Boolean, Column, Date, Float, ForeignKey, Integer, Table, PrimaryKeyConstraint
+    Boolean, Column, Date, Float, ForeignKey, Integer, Table
 )
 from sqlalchemy.dialects.sqlite import VARCHAR
 from sqlalchemy.orm import backref, declarative_base, relationship
