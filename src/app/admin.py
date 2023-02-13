@@ -127,8 +127,8 @@ class AdminRoutes:
         if request.method == 'POST':
             try:
                 self._database.reroute_bun(bun_class=request.form['bun'], user=request.form['username'], target=request.form['target'])
-            except ValueError:
-                flash('User {} has not order a {} bun'.format(request.form['username'], request.form['bun']))
+            except DatabaseError:
+                flash(f'User {request.form["username"]} has not order a {request.form["bun"]} bun')
             return render_template('admin.html', order_exists=self._database.active_order_exists(), store_stats=get_store_stats(self._database))
         return render_template('admin/reroute.html', bun_classes=self._database.list_bun_classes(), users=self._database.list_accounts(), order_exist=self._database.active_order_exists())
 
@@ -142,7 +142,7 @@ def _get_change_of_balance(request):
 
 def get_store_stats(mett_store: MettInterface) -> Dict[str, Union[int, float]]:
     deposits = sum(deposit['amount'] for deposit in mett_store.get_deposits())
-    purchases = sum(purchase['price'] for purchase in mett_store.list_purchases(processed=True))
+    purchases = sum(purchase.price for purchase in mett_store.list_purchases(processed=True))
     return {
         'sum_of_deposits': deposits,
         'sum_of_purchases': purchases,

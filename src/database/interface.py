@@ -180,14 +180,14 @@ class MettInterface(SQLDatabase):
         user = session.get(UserEntry, account)
         user.balance -= price
 
-    def change_balance(self, account, amount, admin):
+    def change_balance(self, account: str, amount: float, admin: str):
         # Store which admin has allowed the balance change
         if not self.user_exists(account) or not self.user_exists(admin):
             raise DatabaseError('User does not exist')
         with self.get_read_write_session() as session:
             user = session.get(UserEntry, account)
             user.balance += amount
-            deposit = DepositEntry(admin=admin, user=account, amount=amount, timestamp=datetime.now().date())
+            deposit = DepositEntry(admin=admin, user=account, amount=-amount, timestamp=datetime.now().date())
             session.add(deposit)
 
     def list_accounts(self):

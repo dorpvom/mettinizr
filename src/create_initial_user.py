@@ -5,6 +5,7 @@ from app.app_setup import AppSetup
 
 def create_init_user(app_setup):
     app_setup.database.create_tables()
+    app_setup.database.initialize_bun_classes()
 
     with app_setup.app.app_context():
         app_setup.database.create_user(
