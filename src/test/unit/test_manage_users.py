@@ -8,16 +8,16 @@ from manage_users import prompt_for_actions
 
 def create_user(app, name, password):
     with app.app.app_context():
-        app.user_interface.create_user(name=name, password=password)
+        app.database.create_user(name=name, password=password)
 
 
 def test_create_user(combined_app, monkeypatch):
     monkeypatch.setattr('sys.stdin', io.StringIO('create_user\ntest\n\0'))
     monkeypatch.setattr('manage_users.getpass.getpass', lambda *_: 'test')  # stdin mocking does not seem to work here ..
 
-    assert not combined_app.user_interface.user_exists('test')
+    assert not combined_app.database.user_exists('test')
     prompt_for_actions(combined_app)
-    assert combined_app.user_interface.user_exists('test')
+    assert combined_app.database.user_exists('test')
 
 
 def test_create_user_exists(combined_app, monkeypatch, capsys):
@@ -51,14 +51,14 @@ def test_create_user_name_too_long(combined_app, monkeypatch, capsys):
 def test_create_role(combined_app, monkeypatch):
     monkeypatch.setattr('sys.stdin', io.StringIO('create_role\ntest\n\0'))
 
-    assert not combined_app.user_interface.role_exists('test')
+    assert not combined_app.database.role_exists('test')
     prompt_for_actions(combined_app)
-    assert combined_app.user_interface.role_exists('test')
+    assert combined_app.database.role_exists('test')
 
 
 def test_create_role_exists(combined_app, monkeypatch, capsys):
     monkeypatch.setattr('sys.stdin', io.StringIO('create_role\ntest\n\0'))
-    combined_app.user_interface.create_role(name='test')
+    combined_app.database.create_role(name='test')
 
     prompt_for_actions(combined_app)
     out, _ = capsys.readouterr()
@@ -68,11 +68,11 @@ def test_create_role_exists(combined_app, monkeypatch, capsys):
 def test_add_role_to_user(combined_app, monkeypatch):
     monkeypatch.setattr('sys.stdin', io.StringIO('add_role_to_user\ntest\ntest\n\0'))
     create_user(app=combined_app, name='test', password='test')
-    combined_app.user_interface.create_role(name='test')
+    combined_app.database.create_role(name='test')
 
     prompt_for_actions(combined_app)
 
-    user = combined_app.user_interface.find_user('test')
+    user = combined_app.database.find_user('test')
     assert user.roles[0].name == 'test'
 
 
@@ -96,12 +96,12 @@ def test_add_role_no_role(combined_app, monkeypatch, capsys):
 def test_remove_role_from_user(combined_app, monkeypatch):
     monkeypatch.setattr('sys.stdin', io.StringIO('remove_role_from_user\ntest\ntest\n\0'))
     create_user(app=combined_app, name='test', password='test')
-    combined_app.user_interface.create_role(name='test')
-    combined_app.user_interface.add_role_to_user(user='test', role='test')
+    combined_app.database.create_role(name='test')
+    combined_app.database.add_role_to_user(user='test', role='test')
 
     prompt_for_actions(combined_app)
 
-    user = combined_app.user_interface.find_user('test')
+    user = combined_app.database.find_user('test')
     assert len(user.roles) == 0
 
 
@@ -126,9 +126,9 @@ def test_delete_user(combined_app, monkeypatch):
     monkeypatch.setattr('sys.stdin', io.StringIO('delete_user\ntest\n\0'))
     create_user(app=combined_app, name='test', password='test')
 
-    assert combined_app.user_interface.user_exists('test')
+    assert combined_app.database.user_exists('test')
     prompt_for_actions(combined_app)
-    assert not combined_app.user_interface.user_exists('test')
+    assert not combined_app.database.user_exists('test')
 
 
 def test_delete_user_no_user(combined_app, monkeypatch, capsys):

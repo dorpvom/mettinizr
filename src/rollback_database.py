@@ -139,7 +139,7 @@ def rollback(mett_store, user_store, app):
 
 
 def setup_rollback(app):
-    rollback(app.mett_store, app.user_interface, app.app)
+    rollback(app.mett_store, app.database, app.app)
     return 0
 
 

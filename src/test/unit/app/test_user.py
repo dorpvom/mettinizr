@@ -4,8 +4,8 @@ from test.unit.common import TestUser
 
 
 def test_user_home(client, app):
-    app.user_interface.create_role(name='test_role')
-    app.user_interface.add_role_to_user(user=TestUser.name, role='test_role')
+    app.database.create_role(name='test_role')
+    app.database.add_role_to_user(user=TestUser.name, role='test_role')
 
     response = client.get('/user')
 
@@ -22,7 +22,7 @@ def test_create_user(client, app):
 
 
 def test_add_role(client, app):
-    app.user_interface.create_role(name='test_role')
+    app.database.create_role(name='test_role')
 
     before = client.get('/user')
     assert b'<td>test_role</td>' not in before.data
@@ -32,8 +32,8 @@ def test_add_role(client, app):
 
 
 def test_remove_role(client, app):
-    app.user_interface.create_role(name='test_role')
-    app.user_interface.add_role_to_user(user=TestUser.name, role='test_role')
+    app.database.create_role(name='test_role')
+    app.database.add_role_to_user(user=TestUser.name, role='test_role')
 
     before = client.get('/user')
     assert b'<td>test_role</td>' in before.data
@@ -45,11 +45,11 @@ def test_remove_role(client, app):
 def test_delete_user(client, app, monkeypatch):
     monkeypatch.setattr('app.user.current_user', TestUser())
 
-    assert app.mett_store.user_exists(TestUser.name)
+    assert app.database.user_exists(TestUser.name)
 
     response = client.get('/user/delete/{}'.format(TestUser.name), follow_redirects=True)
     assert response.status_code == 200
-    assert not app.mett_store.user_exists(TestUser.name)
+    assert not app.database.user_exists(TestUser.name)
 
 
 @pytest.mark.skip(

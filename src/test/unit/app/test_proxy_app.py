@@ -17,11 +17,11 @@ def app_fixture(config_for_tests, monkeypatch):
 
 @pytest.fixture(scope='function')
 def client_fixture(app_fixture):  # pylint: disable=redefined-outer-name
-    app_fixture.mett_store.create_tables()
-    app_fixture.mett_store.initialize_bun_classes()
+    app_fixture.database.create_tables()
+    app_fixture.database.initialize_bun_classes()
 
     with app_fixture.app.app_context():
-        app_fixture.user_interface.create_user(name=TestUser.name, password=TestUser.password)
+        app_fixture.database.create_user(name=TestUser.name, password=TestUser.password)
 
     return app_fixture.app.test_client()
 

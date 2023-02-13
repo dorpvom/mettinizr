@@ -14,7 +14,7 @@ def test_home_dashboard(client, app):
 
 
 def test_dashboard_order_exists(client, app):
-    app.mett_store.create_order('2099-01-01')
+    app.database.create_order('2099-01-01')
 
     response = client.get('/')
     assert 'Hi {}'.format(TestUser.name).encode() in response.data
@@ -22,9 +22,9 @@ def test_dashboard_order_exists(client, app):
 
 
 def test_dashboard_order_history(client, app):
-    app.mett_store.create_order('2099-01-01')
-    app.mett_store.order_bun(TestUser.name, 'Weizen')
-    app.mett_store.process_order()
+    app.database.create_order('2099-01-01')
+    app.database.order_bun(TestUser.name, 'Weizen')
+    app.database.process_order()
 
     response = client.get('/')
     assert b'You have ordered a mean of 1.0 total buns' in response.data

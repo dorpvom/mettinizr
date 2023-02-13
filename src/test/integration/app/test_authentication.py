@@ -8,11 +8,11 @@ def auth_app(config_for_tests):
     config_for_tests.set('Runtime', 'testing', 'false')
 
     app = AppSetup(config=config_for_tests)
-    app.user_interface.create_tables()
+    app.database.create_tables()
     with app.app.app_context():
-        app.user_interface.create_user('authenticated', 'password')
-    app.user_interface.create_role('user')
-    app.user_interface.add_role_to_user('authenticated', 'user')
+        app.database.create_user('authenticated', 'password')
+    app.database.create_role('user')
+    app.database.add_role_to_user('authenticated', 'user')
 
     return app
 

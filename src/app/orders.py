@@ -7,10 +7,10 @@ from app.security.decorator import roles_accepted
 
 
 class OrderRoutes:
-    def __init__(self, app, config, mett_store):
+    def __init__(self, app, config, database):
         self._app = app
         self._config = config
-        self._mett_store = mett_store
+        self._database = database
 
         self._app.add_url_rule('/order', 'order', self._show_order_home, methods=['GET', 'POST'])
         self._app.add_url_rule('/order/purchase', 'order/purchase', self._state_purpose, methods=['GET', 'POST'])
@@ -23,7 +23,7 @@ class OrderRoutes:
 
             try:
                 for _ in range(int(mett_order['amount'])):
-                    self._mett_store.order_bun(current_user.name, mett_order['bun_class'])
+                    self._database.order_bun(current_user.name, mett_order['bun_class'])
             except ValueError:
                 flash('Please state amount of buns')
 
@@ -36,7 +36,7 @@ class OrderRoutes:
     def _state_purpose(self):
         if request.method == 'POST':
             transaction = _get_purchase_information(request)
-            self._mett_store.state_purchase(current_user.name, float(transaction['amount']), transaction['purpose'])
+            self._database.state_purchase(current_user.name, float(transaction['amount']), transaction['purpose'])
 
             allowed_to_order, bun_classes, buns, mett, order_exists = self._prepare_data_for_order_page()
             return render_template('order.html', allowed_to_order=allowed_to_order, bun_classes=bun_classes, order_exists=order_exists, buns=buns, mett=mett)
@@ -45,7 +45,7 @@ class OrderRoutes:
 
     @roles_accepted('user', 'admin')
     def _show_previous_orders(self):
-        all_information = self._mett_store.get_all_order_information()
+        all_information = self._database.get_all_order_information()
 
         for order in all_information:
             order['_id'] = str(order['_id'])
@@ -54,14 +54,14 @@ class OrderRoutes:
         return render_template('order/previous.html', orders=all_information)
 
     def _prepare_data_for_order_page(self):
-        order_exists = self._mett_store.active_order_exists()
-        allowed_to_order = not self._mett_store.current_order_is_expired() if order_exists else False
+        order_exists = self._database.active_order_exists()
+        allowed_to_order = not self._database.current_order_is_expired() if order_exists else False
         if order_exists:
-            buns = self._mett_store.get_current_bun_order()
-            mett = self._mett_store.get_current_mett_order()
+            buns = self._database.get_current_bun_order()
+            mett = self._database.get_current_mett_order()
         else:
             buns, mett = None, None
-        bun_classes = self._mett_store.list_bun_classes_with_price()
+        bun_classes = self._database.list_bun_classes_with_price()
         return allowed_to_order, bun_classes, buns, mett, order_exists
 
 

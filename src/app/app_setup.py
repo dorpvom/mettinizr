@@ -67,15 +67,13 @@ class AppSetup:
         self.app = Flask(__name__)
         self.app.secret_key = os.urandom(24)
 
-        self.user_interface = add_flask_security_to_app(self.app, self.config)
+        self.database = add_flask_security_to_app(self.app, self.config)
 
-        self.mett_store = self.user_interface
-
-        OrderRoutes(self.app, self.config, self.mett_store)
-        DashboardRoutes(self.app, self.config, self.mett_store)
-        AdminRoutes(self.app, self.config, self.mett_store)
-        ProfileRoutes(self.app, self.config, self.user_interface)
-        UserRoutes(self.app, self.config, self.mett_store, self.user_interface)
+        OrderRoutes(self.app, self.config, self.database)
+        DashboardRoutes(self.app, self.config, self.database)
+        AdminRoutes(self.app, self.config, self.database)
+        ProfileRoutes(self.app, self.config, self.database)
+        UserRoutes(self.app, self.config, self.database)
         Filter(self.app, self.config)
 
         if self.config.getboolean('Runtime', 'behind_proxy'):

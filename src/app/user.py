@@ -12,11 +12,10 @@ from database.interface import DatabaseError, password_is_legal, MettInterface
 
 
 class UserRoutes:
-    def __init__(self, app, config, mett_store, user_interface: MettInterface):
+    def __init__(self, app, config, database: MettInterface):
         self._app = app
         self._config = config
-        self._mett_store = mett_store
-        self._user_interface = user_interface
+        self._database = database
 
         self._app.add_url_rule('/user', 'user', self._show_user_home, methods=['GET', 'POST'])
         self._app.add_url_rule('/user/delete/<name>', 'user/delete/<name>', self._delete_user, methods=['GET'])
@@ -41,15 +40,15 @@ class UserRoutes:
             flash(str(error), 'danger')
             users = []
 
-        return render_template('user.html', users=users, existing_roles=self._user_interface.list_roles())
+        return render_template('user.html', users=users, existing_roles=self._database.list_roles())
 
     @roles_accepted('admin')
     def _delete_user(self, name):
         try:
             admin = current_user.name if not current_user.is_anonymous else 'anonymous'
-            balance = self._mett_store.get_balance(name)
-            self._mett_store.change_balance(name, -balance, admin)
-            self._user_interface.delete_user(name)
+            balance = self._database.get_balance(name)
+            self._database.change_balance(name, -balance, admin)
+            self._database.delete_user(name)
         except DatabaseError as error:
             flash(str(error), 'warning')
         except RuntimeError:
@@ -57,11 +56,11 @@ class UserRoutes:
         return redirect(url_for('user'))
 
     def _generate_user_information(self):
-        for user in self._user_interface.list_accounts():
+        for user in self._database.list_accounts():
             information = {
                 'name': user,
-                'roles': self._user_interface.get_roles(user),
-                'balance': self._mett_store.get_balance(user)
+                'roles': self._database.get_roles(user),
+                'balance': self._database.get_balance(user)
             }
             yield information
 
@@ -74,8 +73,8 @@ class UserRoutes:
             if not password_is_legal(request.form['new_password']):
                 raise ValueError('Please choose legal password')
 
-            self._user_interface.create_user(name=request.form['new_user'], password=request.form['new_password'])
-            self._user_interface.add_role_to_user(user=request.form['new_user'], role=self._config.get('User', 'default_role'))
+            self._database.create_user(name=request.form['new_user'], password=request.form['new_password'])
+            self._database.add_role_to_user(user=request.form['new_user'], role=self._config.get('User', 'default_role'))
 
         except (DatabaseError, ValueError) as error:
             flash(str(error), 'warning')
@@ -83,10 +82,10 @@ class UserRoutes:
             flash('Can\'t create user {}. Might already exist. Otherwise check for bad spelling.'.format(request.form['new_user']), 'warning')
 
     def _handle_added_role(self):
-        self._user_interface.add_role_to_user(user=request.form['add_role_username'], role=request.form['added_role'])
+        self._database.add_role_to_user(user=request.form['add_role_username'], role=request.form['added_role'])
 
     def _handle_removed_role(self):
-        self._user_interface.remove_role_from_user(user=request.form['remove_role_username'], role=request.form['removed_role'])
+        self._database.remove_role_from_user(user=request.form['remove_role_username'], role=request.form['removed_role'])
 
     def _handle_password_change(self):
         new_password = request.form['new_password']
@@ -97,7 +96,7 @@ class UserRoutes:
         elif not password_is_legal(new_password):
             flash('Error: password is not legal. Please choose another password.')
         else:
-            self._user_interface.change_password(request.form['name'], new_password)
+            self._database.change_password(request.form['name'], new_password)
             flash('password change successful', 'success')
 
 

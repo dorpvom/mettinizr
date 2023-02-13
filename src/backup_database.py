@@ -65,7 +65,7 @@ def backup(app, user_store, mett_store: MettStore):
 
 
 def start_backup(app_setup):
-    backup(app_setup.app, app_setup.user_interface, app_setup.mett_store)
+    backup(app_setup.app, app_setup.database, app_setup.mett_store)
     return 0
 
 

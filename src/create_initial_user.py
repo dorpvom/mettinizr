@@ -4,16 +4,16 @@ from app.app_setup import AppSetup
 
 
 def create_init_user(app_setup):
-    app_setup.user_interface.create_tables()
+    app_setup.database.create_tables()
 
     with app_setup.app.app_context():
-        app_setup.user_interface.create_user(
+        app_setup.database.create_user(
             name=app_setup.config.get('Database', 'default_user'),
             password=app_setup.config.get('Database', 'default_password')
         )
-    app_setup.user_interface.create_role(name='admin')
-    app_setup.user_interface.create_role(name='user')
-    app_setup.user_interface.add_role_to_user(user=app_setup.config.get('Database', 'default_user'), role='admin')
+    app_setup.database.create_role(name='admin')
+    app_setup.database.create_role(name='user')
+    app_setup.database.add_role_to_user(user=app_setup.config.get('Database', 'default_user'), role='admin')
 
     return 0
 

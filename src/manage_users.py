@@ -120,7 +120,7 @@ def prompt_for_actions(app_setup):
         else:
             try:
                 acting_function = getattr(Actions, action)
-                acting_function(app_setup.user_interface, app_setup.app)
+                acting_function(app_setup.database, app_setup.app)
             except (DatabaseError, ValueError) as error:
                 print('error: {}'.format(error))
             except EOFError:

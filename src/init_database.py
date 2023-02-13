@@ -1,11 +1,9 @@
-from pathlib import Path
 from configparser import ConfigParser
+from pathlib import Path
 
 from app.app_setup import AppSetup
 from database.database import DatabaseError
 from database.interface import MettInterface
-from time import time
-
 
 DEFAULT_CONFIG_FILE = Path(Path(__file__).parent, 'config', 'app.config')
 

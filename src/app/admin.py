@@ -11,10 +11,10 @@ from database.interface import MettInterface, DatabaseError
 
 
 class AdminRoutes:
-    def __init__(self, app, config, mett_store: MettInterface):
+    def __init__(self, app, config, database: MettInterface):
         self._app = app
         self._config = config
-        self._mett_store = mett_store
+        self._database = database
 
         self._app.add_url_rule('/admin', 'admin', self._show_admin_home, methods=['GET', 'POST'])
 
@@ -38,20 +38,20 @@ class AdminRoutes:
         if request.method == 'POST':
             expiry_date = request.form['expiry']
             try:
-                self._mett_store.create_order(expiry_date)
+                self._database.create_order(expiry_date)
             except (DatabaseError, ValueError) as error:
                 flash(str(error), 'warning')
 
-        return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
+        return render_template('admin.html', order_exists=self._database.active_order_exists(), store_stats=get_store_stats(self._database))
 
     @roles_accepted('admin')
     def _cancel_order(self):
-        self._mett_store.drop_current_order()
+        self._database.drop_current_order()
         return self._show_admin_home()
 
     @roles_accepted('admin')
     def _close_order(self):
-        self._mett_store.process_order()
+        self._database.process_order()
         return self._show_admin_home()
 
     @roles_accepted('admin')
@@ -59,30 +59,30 @@ class AdminRoutes:
         if request.method == 'POST':
             transaction = _get_change_of_balance(request)
             admin = current_user.name if not current_user.is_anonymous else 'anonymous'
-            self._mett_store.change_balance(account=transaction['user'], amount=transaction['amount'], admin=admin)
+            self._database.change_balance(account=transaction['user'], amount=transaction['amount'], admin=admin)
 
-            return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
+            return render_template('admin.html', order_exists=self._database.active_order_exists(), store_stats=get_store_stats(self._database))
 
-        user_names = self._mett_store.list_accounts()
+        user_names = self._database.list_accounts()
         return render_template('admin/balance.html', users=user_names)
 
     @roles_accepted('admin')
     def _list_purchases(self):
-        processed = self._mett_store.list_purchases(processed=True)
-        unprocessed = self._mett_store.list_purchases(processed=False)
+        processed = self._database.list_purchases(processed=True)
+        unprocessed = self._database.list_purchases(processed=False)
 
         return render_template('admin/purchase.html', processed=processed, unprocessed=unprocessed)
 
     @roles_accepted('admin')
     def _authorize_purchase(self, purchase_id):
         admin = current_user.name if not current_user.is_anonymous else 'anonymous'
-        self._mett_store.authorize_purchase(purchase_id, admin)
+        self._database.authorize_purchase(purchase_id, admin)
         return self._list_purchases()
 
     @roles_accepted('admin')
     def _decline_purchase(self, purchase_id):
         admin = current_user.name if not current_user.is_anonymous else 'anonymous'
-        self._mett_store.decline_purchase(purchase_id, admin)
+        self._database.decline_purchase(purchase_id, admin)
         return self._list_purchases()
 
     @roles_accepted('admin')
@@ -93,44 +93,44 @@ class AdminRoutes:
             except RuntimeError:
                 flash('Empty request. Please specify change of formula.', 'warning')
 
-        return render_template('admin/formula.html', bun_classes=self._mett_store.list_bun_classes())
+        return render_template('admin/formula.html', bun_classes=self._database.list_bun_classes())
 
     @roles_accepted('admin')
     def _assign_spare(self):
         if request.method == 'POST':
-            self._mett_store.assign_spare(bun_class=request.form['bun'], user=request.form['username'])
-            return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
-        return render_template('admin/spare.html', bun_classes=self._mett_store.list_bun_classes(), users=self._mett_store.list_accounts())
+            self._database.assign_spare(bun_class=request.form['bun'], user=request.form['username'])
+            return render_template('admin.html', order_exists=self._database.active_order_exists(), store_stats=get_store_stats(self._database))
+        return render_template('admin/spare.html', bun_classes=self._database.list_bun_classes(), users=self._database.list_accounts())
 
     def _apply_change_to_formula(self, request):
         if 'price' in request.form:
-            self._mett_store.change_bun_price(request.form['bun'], request.form['price'])
+            self._database.change_bun_price(request.form['bun'], request.form['price'])
         elif 'amount' in request.form:
-            self._mett_store.change_mett_formula(request.form['bun'], request.form['amount'])
+            self._database.change_mett_formula(request.form['bun'], request.form['amount'])
         else:
             raise RuntimeError('No change applied')
 
     @roles_accepted('admin')
     def _list_deposits(self):
-        deposits = self._mett_store.get_deposits()
+        deposits = self._database.get_deposits()
         return render_template('admin/deposit.html', deposits=deposits)
 
     @roles_accepted('admin')
     def _assign_bun(self):
         if request.method == 'POST':
-            self._mett_store.order_bun(request.form['username'], request.form['bun'])
-            return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
-        return render_template('admin/assign.html', bun_classes=self._mett_store.list_bun_classes(), users=self._mett_store.list_accounts(), order_exists=self._mett_store.active_order_exists())
+            self._database.order_bun(request.form['username'], request.form['bun'])
+            return render_template('admin.html', order_exists=self._database.active_order_exists(), store_stats=get_store_stats(self._database))
+        return render_template('admin/assign.html', bun_classes=self._database.list_bun_classes(), users=self._database.list_accounts(), order_exists=self._database.active_order_exists())
 
     @roles_accepted('admin')
     def _reroute_bun(self):
         if request.method == 'POST':
             try:
-                self._mett_store.reroute_bun(bun_class=request.form['bun'], user=request.form['username'], target=request.form['target'])
+                self._database.reroute_bun(bun_class=request.form['bun'], user=request.form['username'], target=request.form['target'])
             except ValueError:
                 flash('User {} has not order a {} bun'.format(request.form['username'], request.form['bun']))
-            return render_template('admin.html', order_exists=self._mett_store.active_order_exists(), store_stats=get_store_stats(self._mett_store))
-        return render_template('admin/reroute.html', bun_classes=self._mett_store.list_bun_classes(), users=self._mett_store.list_accounts(), order_exist=self._mett_store.active_order_exists())
+            return render_template('admin.html', order_exists=self._database.active_order_exists(), store_stats=get_store_stats(self._database))
+        return render_template('admin/reroute.html', bun_classes=self._database.list_bun_classes(), users=self._database.list_accounts(), order_exist=self._database.active_order_exists())
 
 
 def _get_change_of_balance(request):
